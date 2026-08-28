@@ -244,6 +244,8 @@ class BaseAgent(ABC):
         #   Removing them would break all existing tests.
         #   Additive change: the new `task` kwarg is optional (default None).
         # -----------------------------------------------------------------------
+        from backend.security.masking import mask_pii
+        
         if task is not None:
             _diff = task.diff
             _pr_title = task.pr_title
@@ -260,6 +262,9 @@ class BaseAgent(ABC):
             _retrieved_context = retrieved_context
             _peer_context = ()  # no peer context in old-style calls
             _workflow_id = None  # Phase 16: legacy callers have no workflow id
+
+        # Scrub PII (secrets, etc.) before any further processing
+        _diff = mask_pii(_diff)
 
         # STEP 1: Truncate the diff to this agent's context budget.
         truncated_diff = _truncate_to_budget(_diff, config.context_budget_tokens)
