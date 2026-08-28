@@ -47,7 +47,10 @@ from backend.config.settings import get_settings
 from backend.data.freshness import get_stale_files, mark_files_embedded
 from backend.database.postgres import get_session_factory
 from backend.memory.embedder import EmbeddingError, embed_text
-from backend.memory.tiger_client import CodeChunk, get_tiger_memory  # TIGER: was qdrant_client
+from backend.memory.tiger_client import (  # TIGER: was qdrant_client
+    CodeChunk,
+    get_tiger_memory,
+)
 
 logger = logging.getLogger(__name__)
 

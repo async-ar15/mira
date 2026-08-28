@@ -33,9 +33,9 @@
 # -> We document per field: which nodes READ it, which nodes WRITE it.
 
 from typing import Any
+
 from typing_extensions import TypedDict
 
-from backend.core.workflow_engine import AgentFindingSummary, WorkflowResult
 from backend.models.enums import ReviewStatus, ReviewVerdict
 
 

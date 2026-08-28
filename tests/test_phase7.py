@@ -30,15 +30,16 @@
 import asyncio
 import json
 import logging
+
+# ─── path setup ──────────────────────────────────────────────────────────────
+# Ensure backend package is importable from the project root.
+import os
 import sys
 import time
 from unittest.mock import patch
 
 import httpx
 
-# ─── path setup ──────────────────────────────────────────────────────────────
-# Ensure backend package is importable from the project root.
-import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -178,7 +179,6 @@ def run_all_tests():
 
     # ─── Test 1: PRMetadata parses GitHub JSON correctly ─────────────────────
     async def test_pr_metadata_parsing():
-        from backend.integrations.github_client import GitHubClient
         from backend.integrations.github_models import PRMetadata
 
         def handler(request: httpx.Request) -> httpx.Response:
@@ -203,7 +203,6 @@ def run_all_tests():
 
     # ─── Test 2: get_pr_diff returns raw diff string ──────────────────────────
     async def test_get_pr_diff():
-        from backend.integrations.github_client import GitHubClient
 
         def handler(request: httpx.Request) -> httpx.Response:
             return mock_response(200, SAMPLE_DIFF)
@@ -224,7 +223,6 @@ def run_all_tests():
 
     # ─── Test 3: get_pr_files returns list[PRFile] ────────────────────────────
     async def test_get_pr_files():
-        from backend.integrations.github_client import GitHubClient
         from backend.integrations.github_models import PRFile, PRFileStatus
 
         def handler(request: httpx.Request) -> httpx.Response:
@@ -386,7 +384,6 @@ def run_all_tests():
 
     # ─── Test 9: Rate limit warning fires when X-RateLimit-Remaining < 100 ────
     async def test_rate_limit_warning_logged():
-        import logging
 
         def handler(request: httpx.Request) -> httpx.Response:
             return mock_response(

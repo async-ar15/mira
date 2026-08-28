@@ -17,7 +17,6 @@
 
 from enum import Enum
 
-
 # -----------------------------------------------------------------------------
 # Review Workflow Status
 # This is the state machine defined in Phase 3.

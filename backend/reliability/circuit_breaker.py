@@ -50,9 +50,10 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict
+from typing import Any
 
 # Python 3.10 StrEnum shim
 try:
@@ -341,7 +342,7 @@ class CircuitBreaker:
 # Wiki ref: release-it/Bulkheads.md "Partition systems into independent
 # compartments so that failure in one section does not sink the entire vessel."
 
-_REGISTRY: Dict[str, CircuitBreaker] = {}
+_REGISTRY: dict[str, CircuitBreaker] = {}
 _REGISTRY_LOCK = threading.Lock()
 
 

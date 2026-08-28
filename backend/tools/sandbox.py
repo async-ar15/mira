@@ -31,9 +31,9 @@
 
 from __future__ import annotations
 
+import logging
 import subprocess
 import time
-import logging
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,6 @@ class SandboxViolationError(Exception):
         SandboxViolationError is also a policy error — both should be caught
         and surfaced as security findings, not bubbled as internal errors.
     """
-    pass
 
 
 # ---------------------------------------------------------------------------

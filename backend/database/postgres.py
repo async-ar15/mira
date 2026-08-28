@@ -75,7 +75,6 @@ class Base(DeclarativeBase):
     Inheriting from DeclarativeBase (SQLAlchemy 2.0 style) gives each model
     class a __tablename__, column definitions, and automatic metadata tracking.
     """
-    pass
 
 
 # ---------------------------------------------------------------------------

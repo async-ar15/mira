@@ -1,12 +1,14 @@
 """One-shot ALTER: github_review_id INT -> BIGINT on reviews table."""
-import asyncio, os, re
+import asyncio
+import re
 from pathlib import Path
 
 env = Path(".env").read_text()
-m = re.search(r'^DATABASE_URL=(.+)$', env, re.M)
+m = re.search(r'^DATABASE_URL=(.+)$', env, re.MULTILINE)
 url = m.group(1).strip().strip('"').strip("'")
 
 import asyncpg
+
 
 async def main():
     # Convert sqlalchemy URL to asyncpg-friendly

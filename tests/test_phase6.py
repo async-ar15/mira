@@ -31,7 +31,6 @@ from __future__ import annotations
 import asyncio
 import sys
 import uuid
-from typing import get_type_hints
 
 # ---------------------------------------------------------------------------
 # Setup path so local imports work
@@ -201,12 +200,11 @@ async def main() -> None:
     print("\n--- Section 4: context_retriever graceful degradation ---")
 
     try:
-        from backend.memory.context_retriever import retrieve_context_for_diff
-
         # Use a bogus Qdrant URL — connection will fail.
         # retrieve_context_for_diff() must return "" without raising.
         # This is the critical invariant: Qdrant down = "" returned, no crash.
         from backend.config.settings import Settings
+        from backend.memory.context_retriever import retrieve_context_for_diff
 
         bad_settings = Settings(
             github_webhook_secret="test-secret",

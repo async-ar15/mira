@@ -40,21 +40,25 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.config.settings import get_settings
-from backend.database.postgres import init_db
-from backend.memory.context_retriever import retrieve_context_for_diff  # noqa: F401 (used in routes)
-from backend.database.postgres import init_tiger_schema  # TIGER: replaces ensure_collection
-from backend.memory.redis_client import redis_client
-from backend.webhook_receiver.router import router as webhook_router
+from backend.api.economics_router import economics_router  # Phase 16: cost & budget
+from backend.api.hitl_router import hitl_router  # Phase 19: HITL queue + dispute
+from backend.api.queue import router as queue_router
 
 # Phase 3 REST API routers
 from backend.api.reviews import router as reviews_router
-from backend.api.queue import router as queue_router
-from backend.api.hitl_router import hitl_router       # Phase 19: HITL queue + dispute
-from backend.api.economics_router import economics_router  # Phase 16: cost & budget
+from backend.config.settings import get_settings
+from backend.database.postgres import (
+    init_db,
+    init_tiger_schema,  # TIGER: replaces ensure_collection
+)
+from backend.memory.context_retriever import (
+    retrieve_context_for_diff,  # noqa: F401 (used in routes)
+)
+from backend.memory.redis_client import redis_client
 
 # Phase 12 circuit breaker registry — surfaced in /health
 from backend.reliability.circuit_breaker import list_breaker_summaries
+from backend.webhook_receiver.router import router as webhook_router
 
 # -------------------------------------------------------------------------
 # Read version from pyproject.toml (single source of truth)
@@ -273,9 +277,10 @@ async def _check_postgres() -> str:
     Returns "ok" or an error string. Never raises.
     """
     try:
-        from backend.database.postgres import get_engine
-        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
         from sqlalchemy import text
+        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+        from backend.database.postgres import get_engine
         factory = async_sessionmaker(
             bind=get_engine(),
             class_=AsyncSession,

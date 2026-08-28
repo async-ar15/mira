@@ -41,8 +41,9 @@ import functools
 import logging
 import random
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Sequence, Type, TypeVar
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ class RetryConfig:
     max_delay_s: float = 30.0
     jitter: bool = True
     jitter_factor: float = 0.25
-    retryable_exceptions: tuple[Type[Exception], ...] = field(
+    retryable_exceptions: tuple[type[Exception], ...] = field(
         default_factory=lambda: (Exception,)
     )
 

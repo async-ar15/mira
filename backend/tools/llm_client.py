@@ -34,13 +34,13 @@ import asyncio
 import json
 import logging
 import time
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
 
 from backend.core.exceptions import AgentError
+
 logger = logging.getLogger(__name__)
 
 
@@ -283,8 +283,7 @@ def _try_extract_json(text: str) -> dict | list:
         if cleaned.startswith(fence):
             cleaned = cleaned[len(fence):]
             break
-    if cleaned.endswith("```"):
-        cleaned = cleaned[:-3]
+    cleaned = cleaned.removesuffix("```")
     cleaned = cleaned.strip()
 
     try:

@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import asyncpg
@@ -131,7 +131,7 @@ class AgentEvent:
     review_id: str
     agent: str                       # "security" | "quality" | "tests" | "docs" | "aggregator" | "system"
     event_type: str                  # "span.start" | "span.end" | "llm.call" | "tool.call" | "decision" | "escalation"
-    ts: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    ts: datetime = field(default_factory=lambda: datetime.now(UTC))
     span_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     parent_span: str | None = None
     model: str | None = None

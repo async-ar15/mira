@@ -18,18 +18,18 @@ output side. Guards around tool calls. Each guardrail is independent. Each
 can block." (llmops-ai-agents/concepts/Production-Hardening.md)
 """
 
+from backend.security.injection_guard import (
+    InjectionPattern,
+    InjectionResult,
+    PromptInjectionDetector,
+    check_pr_for_injection,
+)
 from backend.security.masking import (
     MaskingContext,
     MaskingPolicy,
     SensitiveKind,
     redact_text,
     unmask_text,
-)
-from backend.security.injection_guard import (
-    InjectionPattern,
-    InjectionResult,
-    PromptInjectionDetector,
-    check_pr_for_injection,
 )
 from backend.security.rbac import (
     Permission,

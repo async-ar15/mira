@@ -20,8 +20,6 @@
 #   cd /path/to/mira
 #   python3 -m pytest tests/smoke_phase14.py -v
 
-import asyncio
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -169,6 +167,7 @@ async def test_mark_files_embedded_upsert(db_session):
 
     # After second call, should reflect sha_v2
     from sqlalchemy import select
+
     from backend.database.models import RepoFileIndexRecord
 
     stmt = select(RepoFileIndexRecord).where(RepoFileIndexRecord.file_path == path)

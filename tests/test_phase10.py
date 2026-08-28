@@ -14,7 +14,6 @@ AuditLogger tests use a tmp_path fixture to avoid file-system side effects.
 from __future__ import annotations
 
 import json
-import logging
 import time
 import uuid
 from pathlib import Path
@@ -24,7 +23,6 @@ import pytest
 # ─────────────────────────────────────────────────────────────────────────────
 # GROUP A: Events (3 tests)
 # ─────────────────────────────────────────────────────────────────────────────
-
 from backend.observability.events import ReviewEvent
 
 
@@ -93,9 +91,8 @@ def test_traced_creates_span_and_measures_duration():
 def test_traced_captures_exception_on_span():
     """traced() records the exception type on span.error without swallowing it."""
     ctx = TraceContext.create(f"review_{uuid.uuid4().hex[:8]}")
-    with pytest.raises(ValueError):
-        with traced("failing_op") as span:
-            raise ValueError("test error")
+    with pytest.raises(ValueError), traced("failing_op") as span:
+        raise ValueError("test error")
 
     assert span.error is not None
     assert "ValueError" in span.error

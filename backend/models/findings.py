@@ -37,6 +37,7 @@
 # means we can handle LLM quirks (e.g., "HIGH" vs "high") without crashing.
 
 from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
 
 from backend.models.enums import FindingCategory, FindingSeverity

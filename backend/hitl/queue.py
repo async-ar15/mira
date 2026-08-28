@@ -44,7 +44,6 @@
 import json
 import logging
 import os
-from datetime import datetime, timezone
 
 import httpx
 from redis.asyncio import Redis
@@ -111,23 +110,22 @@ async def enqueue_hitl_review(
     session_factory = get_session_factory()
     hitl_review_id: str = ""
 
-    async with session_factory() as session:
-        async with session.begin():
-            # Build HITLReview row.
-            hitl_review = HITLReview(
-                review_id=review_id,
-                repo_full_name=repo_full_name,
-                pr_number=pr_number,
-                agent_verdict=agent_verdict,
-                escalation_reason=escalation_reason,
-                findings_snapshot=findings_json,
-                overall_confidence=overall_confidence,
-                status="pending",
-            )
-            session.add(hitl_review)
-            # Flush inside the transaction to get the generated UUID.
-            await session.flush()
-            hitl_review_id = hitl_review.id
+    async with session_factory() as session, session.begin():
+        # Build HITLReview row.
+        hitl_review = HITLReview(
+            review_id=review_id,
+            repo_full_name=repo_full_name,
+            pr_number=pr_number,
+            agent_verdict=agent_verdict,
+            escalation_reason=escalation_reason,
+            findings_snapshot=findings_json,
+            overall_confidence=overall_confidence,
+            status="pending",
+        )
+        session.add(hitl_review)
+        # Flush inside the transaction to get the generated UUID.
+        await session.flush()
+        hitl_review_id = hitl_review.id
 
     logger.info(
         "hitl_queue | enqueued_to_postgres | hitl_id=%s review_id=%s repo=%s pr=%d",

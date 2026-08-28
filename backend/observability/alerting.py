@@ -31,8 +31,9 @@ WHY NOT PROMETHEUS ALERTING RULES?
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 # StrEnum compat (Python 3.10 doesn't have it)
 try:
@@ -54,7 +55,7 @@ class AlertLevel(StrEnum):
     URGENT  = "URGENT"
     PAGE    = "PAGE"
 
-    def is_at_least(self, other: "AlertLevel") -> bool:
+    def is_at_least(self, other: AlertLevel) -> bool:
         """True if this level is >= other in severity."""
         _order = [AlertLevel.INFO, AlertLevel.WARNING, AlertLevel.URGENT, AlertLevel.PAGE]
         return _order.index(self) >= _order.index(other)
@@ -78,9 +79,9 @@ class AlertRule:
     name: str
     level: AlertLevel
     description: str
-    condition: Callable[["MetricSnapshot"], bool]
+    condition: Callable[[MetricSnapshot], bool]
 
-    def check(self, metrics: "MetricSnapshot") -> bool:
+    def check(self, metrics: MetricSnapshot) -> bool:
         """Evaluate this rule against a snapshot.  Never raises."""
         try:
             return bool(self.condition(metrics))
@@ -95,7 +96,7 @@ class FiredAlert:
     rule_name: str
     level: AlertLevel
     description: str
-    metric_snapshot: "MetricSnapshot"
+    metric_snapshot: MetricSnapshot
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -215,7 +216,7 @@ class AlertManager:
 
     def __init__(
         self,
-        rules: Optional[list[AlertRule]] = None,
+        rules: list[AlertRule] | None = None,
     ) -> None:
         # If no rules provided, use the default set.
         # Pass an explicit empty list [] to disable all alerts (useful in tests).
@@ -245,7 +246,7 @@ class AlertManager:
                 )
         return fired
 
-    def highest_level(self, metrics: MetricSnapshot) -> Optional[AlertLevel]:
+    def highest_level(self, metrics: MetricSnapshot) -> AlertLevel | None:
         """Return the highest-severity level from all fired rules, or None.
 
         Useful for a single-signal status dashboard widget:

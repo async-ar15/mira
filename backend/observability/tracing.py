@@ -44,15 +44,16 @@ from __future__ import annotations
 import hashlib
 import time
 import uuid
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, AsyncGenerator, Generator, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 # Module-level ContextVar: holds the active TraceContext for the current coroutine.
 # Initialised to None -- code that doesn't care about tracing never touches it.
-_current_trace: ContextVar[Optional["TraceContext"]] = ContextVar(
+_current_trace: ContextVar[TraceContext | None] = ContextVar(
     "_current_trace", default=None
 )
 
@@ -68,21 +69,21 @@ class TraceSpan:
 
     span_id: str
     trace_id: str
-    parent_span_id: Optional[str]
+    parent_span_id: str | None
     operation_name: str
     start_time: float  # time.monotonic() for duration; epoch stored separately
     start_epoch: str   # ISO-8601 UTC -- human-readable in JSON exports
-    end_time: Optional[float] = field(default=None)
-    duration_ms: Optional[float] = field(default=None)
+    end_time: float | None = field(default=None)
+    duration_ms: float | None = field(default=None)
     # tags: structured metadata -- NOT logged during execution, exported at end
     # Wiki: every span should carry cost_usd and token counts as tags.
     tags: dict[str, Any] = field(default_factory=dict)
     # logs: timestamped in-span events (error messages, retries, etc.)
     logs: list[dict[str, Any]] = field(default_factory=list)
     # error: non-None if the span finished due to an exception
-    error: Optional[str] = field(default=None)
+    error: str | None = field(default=None)
 
-    def finish(self, *, error: Optional[str] = None) -> None:
+    def finish(self, *, error: str | None = None) -> None:
         """Mark span complete.  Idempotent -- safe to call multiple times."""
         if self.duration_ms is not None:
             return  # already finished
@@ -122,7 +123,7 @@ class TraceSpan:
         """
         self.logs.append(
             {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "level": level,
                 "message": message,
             }
@@ -158,10 +159,10 @@ class TraceContext:
     def __init__(self, trace_id: str) -> None:
         self.trace_id = trace_id
         self.spans: list[TraceSpan] = []
-        self._current_span_id: Optional[str] = None
+        self._current_span_id: str | None = None
 
     @classmethod
-    def create(cls, review_id: str) -> "TraceContext":
+    def create(cls, review_id: str) -> TraceContext:
         """Create a new trace and register it in the current contextvars context.
 
         Uses review_id as the trace_id for human-readable correlation --
@@ -172,7 +173,7 @@ class TraceContext:
         return ctx
 
     @classmethod
-    def current(cls) -> Optional["TraceContext"]:
+    def current(cls) -> TraceContext | None:
         """Return the active TraceContext for the current coroutine, or None."""
         return _current_trace.get()
 
@@ -180,7 +181,7 @@ class TraceContext:
         self,
         operation_name: str,
         *,
-        parent_span_id: Optional[str] = None,
+        parent_span_id: str | None = None,
     ) -> TraceSpan:
         """Create and register a new span.
 
@@ -194,13 +195,13 @@ class TraceContext:
             parent_span_id=parent_span_id or self._current_span_id,
             operation_name=operation_name,
             start_time=time.monotonic(),
-            start_epoch=datetime.now(timezone.utc).isoformat(),
+            start_epoch=datetime.now(UTC).isoformat(),
         )
         self.spans.append(span)
         self._current_span_id = span.span_id
         return span
 
-    def end_span(self, span: TraceSpan, *, error: Optional[str] = None) -> None:
+    def end_span(self, span: TraceSpan, *, error: str | None = None) -> None:
         """Mark span finished and restore parent as current."""
         span.finish(error=error)
         # Restore the parent as the active span so the next start_span()
@@ -253,7 +254,7 @@ class TraceContext:
 def traced(
     operation_name: str,
     *,
-    trace_id: Optional[str] = None,
+    trace_id: str | None = None,
 ) -> Generator[TraceSpan, None, None]:
     """Synchronous context manager -- creates a span, yields it, finishes on exit.
 
@@ -275,7 +276,7 @@ def traced(
         ctx = TraceContext.create(tid)
 
     span = ctx.start_span(operation_name)
-    error_msg: Optional[str] = None
+    error_msg: str | None = None
     try:
         yield span
     except Exception as exc:
@@ -290,7 +291,7 @@ def traced(
 async def async_traced(
     operation_name: str,
     *,
-    trace_id: Optional[str] = None,
+    trace_id: str | None = None,
 ) -> AsyncGenerator[TraceSpan, None]:
     """Async version of traced() -- for use inside async def functions.
 
@@ -310,7 +311,7 @@ async def async_traced(
         ctx = TraceContext.create(tid)
 
     span = ctx.start_span(operation_name)
-    error_msg: Optional[str] = None
+    error_msg: str | None = None
     try:
         yield span
     except Exception as exc:
@@ -333,6 +334,6 @@ def _generate_span_id(trace_id: str) -> str:
     return hashlib.md5(raw.encode()).hexdigest()[:16]
 
 
-def get_current_trace() -> Optional[TraceContext]:
+def get_current_trace() -> TraceContext | None:
     """Public accessor -- alternative to TraceContext.current() for imports."""
     return _current_trace.get()

@@ -32,7 +32,6 @@ from pydantic import BaseModel
 
 from backend.models.enums import PullRequestAction
 
-
 # -----------------------------------------------------------------------------
 # Nested models - represent nested JSON objects in the payload
 # -----------------------------------------------------------------------------

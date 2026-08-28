@@ -35,7 +35,7 @@
 #   RepoFileIndexRecord is a NEW table — no existing code is affected.
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -182,7 +182,7 @@ async def mark_files_embedded(
         repo_full_name=repo_full_name,
         file_path=file_path,
         file_sha=file_sha,
-        embedded_at=datetime.now(timezone.utc),
+        embedded_at=datetime.now(UTC),
         chunk_count=chunk_count,
     )
 

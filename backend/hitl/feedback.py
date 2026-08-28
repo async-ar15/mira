@@ -81,20 +81,19 @@ async def record_feedback(
     session_factory = get_session_factory()
 
     try:
-        async with session_factory() as session:
-            async with session.begin():
-                feedback = HITLFeedback(
-                    id=feedback_id,
-                    hitl_review_id=hitl_review_id,
-                    repo_full_name=repo_full_name,
-                    pr_number=pr_number,
-                    agent_verdict=agent_verdict,
-                    human_verdict=human_verdict,
-                    feedback_type=feedback_type,
-                    reason=reason,
-                    context_snapshot=context_snapshot,
-                )
-                session.add(feedback)
+        async with session_factory() as session, session.begin():
+            feedback = HITLFeedback(
+                id=feedback_id,
+                hitl_review_id=hitl_review_id,
+                repo_full_name=repo_full_name,
+                pr_number=pr_number,
+                agent_verdict=agent_verdict,
+                human_verdict=human_verdict,
+                feedback_type=feedback_type,
+                reason=reason,
+                context_snapshot=context_snapshot,
+            )
+            session.add(feedback)
 
         logger.info(
             "hitl_feedback | recorded | id=%s hitl_id=%s type=%s "

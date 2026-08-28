@@ -41,8 +41,9 @@ from __future__ import annotations
 import logging
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class IdempotencyRecord:
     key: str
     status: str = "in_flight"       # in_flight | complete | failed
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
 
@@ -89,7 +90,7 @@ class IdempotencyStore(ABC):
     """
 
     @abstractmethod
-    def get(self, key: str) -> Optional[IdempotencyRecord]:
+    def get(self, key: str) -> IdempotencyRecord | None:
         """Return the record for key, or None if not found."""
 
     @abstractmethod
@@ -133,7 +134,7 @@ class InMemoryIdempotencyStore(IdempotencyStore):
     def __init__(self) -> None:
         self._store: dict[str, IdempotencyRecord] = {}
 
-    def get(self, key: str) -> Optional[IdempotencyRecord]:
+    def get(self, key: str) -> IdempotencyRecord | None:
         return self._store.get(key)
 
     def set_in_flight(self, key: str) -> bool:
@@ -218,7 +219,7 @@ class RedisIdempotencyStore(IdempotencyStore):
     def _key(self, key: str) -> str:
         return f"idempotency:{key}"
 
-    def get(self, key: str) -> Optional[IdempotencyRecord]:
+    def get(self, key: str) -> IdempotencyRecord | None:
         import json
         client = self._get_client()
         raw = client.get(self._key(key))

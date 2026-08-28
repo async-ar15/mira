@@ -33,10 +33,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
-
 
 # =============================================================================
 # INBOUND MODELS
@@ -95,7 +93,7 @@ class PRMetadata(BaseModel):
     model_config = {"populate_by_name": True}
 
     @classmethod
-    def from_github_response(cls, data: dict) -> "PRMetadata":
+    def from_github_response(cls, data: dict) -> PRMetadata:
         """
         Constructs PRMetadata from the raw GitHub API JSON response.
 
@@ -170,10 +168,10 @@ class PRFile(BaseModel):
     # Optional because binary files and files exceeding GitHub's diff limit
     # do not have a patch field in the response.
     # READ BY: agents (fallback if we cannot get the full unified diff)
-    patch: Optional[str] = None
+    patch: str | None = None
 
     @classmethod
-    def from_github_response(cls, data: dict) -> "PRFile":
+    def from_github_response(cls, data: dict) -> PRFile:
         """
         Constructs PRFile from a single entry in GitHub's files list response.
         """
@@ -289,13 +287,13 @@ class PostReviewResponse(BaseModel):
     state: ReviewEvent
 
     # ISO 8601 timestamp of when the review was submitted.
-    submitted_at: Optional[datetime] = None
+    submitted_at: datetime | None = None
 
     # URL to the review on GitHub web UI. Useful for HITL dashboard links.
-    html_url: Optional[str] = None
+    html_url: str | None = None
 
     @classmethod
-    def from_github_response(cls, data: dict) -> "PostReviewResponse":
+    def from_github_response(cls, data: dict) -> PostReviewResponse:
         """Constructs PostReviewResponse from GitHub's API JSON.
 
         GitHub returns review state in past-tense form (APPROVED / CHANGES_REQUESTED /

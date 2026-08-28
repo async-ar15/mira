@@ -45,8 +45,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, TypeVar
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +133,7 @@ async def with_timeout(
     """
     try:
         return await asyncio.wait_for(coro, timeout=seconds)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning(
             "with_timeout: '%s' timed out after %.1fs.", name, seconds
         )
@@ -237,7 +238,7 @@ async def run_with_workflow_timeout(
     """
     try:
         return await asyncio.wait_for(coro, timeout=config.workflow_timeout_s)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.error(
             "run_with_workflow_timeout: full workflow exceeded %.1fs hard limit.",
             config.workflow_timeout_s,

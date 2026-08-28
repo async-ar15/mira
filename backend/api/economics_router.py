@@ -198,8 +198,9 @@ async def get_pr_cost(review_id: str) -> dict:
     Returns total cost, tokens, agents used, and wall time for a specific PR review.
     Source: pr_cost_hourly continuous aggregate (TimescaleDB, refreshed every hour).
     """
-    from backend.database.postgres import get_tiger_pool
     import uuid
+
+    from backend.database.postgres import get_tiger_pool
     pool = get_tiger_pool()
     if pool is None:
         return {"review_id": review_id, "total_cost_usd": 0.0, "total_tokens": 0}

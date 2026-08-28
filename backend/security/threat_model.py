@@ -45,10 +45,10 @@ generated artifact, validation results, approver, timestamp."
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Sequence
 
 # Python 3.10 StrEnum shim
 try:
@@ -57,11 +57,11 @@ except ImportError:
     class StrEnum(str, Enum):  # type: ignore[no-redef]
         pass
 
-from backend.security.masking import MaskingContext, MaskingPolicy, SensitiveKind
 from backend.security.injection_guard import (
     InjectionSeverity,
     PromptInjectionDetector,
 )
+from backend.security.masking import MaskingContext, MaskingPolicy
 
 # ---------------------------------------------------------------------------
 # Threat vocabulary
@@ -162,7 +162,7 @@ class ThreatAssessment:
     overall_severity: ThreatSeverity | None = None
     recommended_action: RecommendedAction = RecommendedAction.ALLOW
     assessed_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(UTC)
     )
     redacted_diff: str = ""         # Safe diff for agent consumption
     placeholder_map: dict[str, str] = field(default_factory=dict)

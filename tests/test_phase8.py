@@ -29,7 +29,9 @@
 
 import asyncio
 import json
-import logging
+
+# ─── path setup ──────────────────────────────────────────────────────────────
+import os
 import sys
 import time
 from typing import Any
@@ -37,8 +39,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 
-# ─── path setup ──────────────────────────────────────────────────────────────
-import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -152,9 +152,9 @@ def run_all_tests():
 
     # ─── Test 1: APPROVE verdict -> event=APPROVE ─────────────────────────────
     async def test_approve_verdict_maps_to_approve_event():
-        from backend.orchestrator.nodes import _verdict_to_review_event
         from backend.integrations.github_models import ReviewEvent
         from backend.models.enums import ReviewVerdict
+        from backend.orchestrator.nodes import _verdict_to_review_event
 
         event = _verdict_to_review_event(ReviewVerdict.APPROVE)
         assert event == ReviewEvent.APPROVE, f"Expected APPROVE, got {event}"
@@ -163,9 +163,9 @@ def run_all_tests():
 
     # ─── Test 2: REQUEST_CHANGES verdict -> event=REQUEST_CHANGES ─────────────
     async def test_request_changes_verdict_maps():
-        from backend.orchestrator.nodes import _verdict_to_review_event
         from backend.integrations.github_models import ReviewEvent
         from backend.models.enums import ReviewVerdict
+        from backend.orchestrator.nodes import _verdict_to_review_event
 
         event = _verdict_to_review_event(ReviewVerdict.REQUEST_CHANGES)
         assert event == ReviewEvent.REQUEST_CHANGES, f"Expected REQUEST_CHANGES, got {event}"
@@ -183,8 +183,8 @@ def run_all_tests():
 
     # ─── Test 3: Findings with file+line become inline ReviewComment ───────────
     async def test_inline_comments_built_correctly():
-        from backend.orchestrator.nodes import _findings_to_review_comments
         from backend.integrations.github_models import ReviewComment
+        from backend.orchestrator.nodes import _findings_to_review_comments
 
         findings = [
             {
@@ -263,8 +263,8 @@ def run_all_tests():
 
     # ─── Test 5: Successful GitHub post + Postgres save ───────────────────────
     async def test_successful_post_and_postgres_save():
-        from backend.orchestrator.nodes import post_review
         from backend.models.enums import ReviewVerdict
+        from backend.orchestrator.nodes import post_review
 
         state = make_state(
             verdict=ReviewVerdict.APPROVE,
@@ -313,9 +313,9 @@ def run_all_tests():
 
     # ─── Test 6: GitHubAPIError routes to HITL (review_posted=False) ──────────
     async def test_github_api_error_routes_to_hitl():
-        from backend.orchestrator.nodes import post_review
         from backend.integrations.github_client import GitHubAPIError
         from backend.models.enums import ReviewVerdict
+        from backend.orchestrator.nodes import post_review
 
         state = make_state(
             verdict=ReviewVerdict.APPROVE,
@@ -352,8 +352,8 @@ def run_all_tests():
         If Postgres is down but the GitHub post succeeded, the review is LIVE on GitHub.
         We must return review_posted=True — do not undo the GitHub post.
         """
-        from backend.orchestrator.nodes import post_review
         from backend.models.enums import ReviewVerdict
+        from backend.orchestrator.nodes import post_review
 
         state = make_state(
             verdict=ReviewVerdict.APPROVE,
@@ -399,8 +399,8 @@ def run_all_tests():
 
     # ─── Test 8: needs_human_review=True -> GitHub never called ───────────────
     async def test_hitl_path_skips_github():
-        from backend.orchestrator.nodes import post_review
         from backend.models.enums import ReviewVerdict
+        from backend.orchestrator.nodes import post_review
 
         state = make_state(
             verdict=ReviewVerdict.NEEDS_HUMAN_REVIEW,
@@ -440,8 +440,8 @@ def run_all_tests():
 
     # ─── Test 9: Review summary body has correct content ──────────────────────
     async def test_review_summary_body_content():
-        from backend.orchestrator.nodes import _build_review_summary
         from backend.models.enums import ReviewVerdict
+        from backend.orchestrator.nodes import _build_review_summary
 
         state = make_state(
             verdict=ReviewVerdict.REQUEST_CHANGES,

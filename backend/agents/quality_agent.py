@@ -22,8 +22,8 @@
 #   - Magic numbers (unexplained numeric literals)
 #   - Dead code in the diff (unreachable code, commented-out blocks)
 
-from backend.models.enums import AgentType
 from backend.agents.base_agent import BaseAgent
+from backend.models.enums import AgentType
 
 
 class QualityAgent(BaseAgent):

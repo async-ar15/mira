@@ -38,12 +38,12 @@ from __future__ import annotations
 import json
 import logging
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Optional
 
 from backend.evaluation.golden_dataset import GoldenPR
-from backend.evaluation.judge import PRReviewJudge, JudgeScore
+from backend.evaluation.judge import JudgeScore, PRReviewJudge
 
 logger = logging.getLogger(__name__)
 
@@ -404,7 +404,7 @@ class RegressionGate:
     def load_baseline(
         self,
         baseline_path: str,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Load a previously saved baseline. Returns None if file does not exist.
 

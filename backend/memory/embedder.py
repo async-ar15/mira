@@ -67,7 +67,6 @@ class EmbeddingError(Exception):
     Never propagates to the user or crashes the review.
     (Production-Hardening.md: "Circuit Breaker — fail gracefully on external API failure.")
     """
-    pass
 
 
 # ---------------------------------------------------------------------------

@@ -48,8 +48,8 @@ boundaries are hard to retrofit. Design them in from the beginning."
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable
 
 # Python 3.10 StrEnum shim (StrEnum added in 3.11)
 try:
@@ -280,7 +280,7 @@ def require_permission(permission: Permission) -> Callable[..., Role]:
 
     # Wrap in a real FastAPI Header dependency if FastAPI is available
     try:
-        from fastapi import Header, Depends  # noqa: F401
+        from fastapi import Depends, Header  # noqa: F401
 
         def _fastapi_check(x_role: str = Header(default="viewer")) -> Role:
             try:

@@ -122,7 +122,6 @@ class GitHubNotFoundError(GitHubAPIError):
       "Not all failures are equal — apply patterns to specific threats."
       -> 404 = deterministic failure. No retry. Raise immediately.
     """
-    pass
 
 
 class GitHubRateLimitError(GitHubAPIError):
@@ -310,7 +309,7 @@ class GitHubClient:
     async def __aenter__(self) -> "GitHubClient":
         return self
 
-    async def __aexit__(self, *args: Any) -> None:
+    async def __aexit__(self, *args: object) -> None:
         await self.close()
 
     # =========================================================================

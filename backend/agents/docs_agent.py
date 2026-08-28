@@ -14,8 +14,8 @@
 #   - Confusing variable names with no explanation
 #   - API endpoint with no docstring describing parameters and response
 
-from backend.models.enums import AgentType
 from backend.agents.base_agent import BaseAgent
+from backend.models.enums import AgentType
 
 
 class DocsAgent(BaseAgent):

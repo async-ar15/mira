@@ -36,7 +36,6 @@
 # row of a paginated list would be wasteful.
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -58,10 +57,10 @@ class FindingResponse(BaseModel):
     severity: str          # "critical" | "high" | "medium" | "low"
     category: str          # "security" | "quality" | "test_coverage" | "documentation"
     summary: str
-    file_path: Optional[str] = None
-    line_start: Optional[int] = None
-    line_end: Optional[int] = None
-    suggestion: Optional[str] = None
+    file_path: str | None = None
+    line_start: int | None = None
+    line_end: int | None = None
+    suggestion: str | None = None
     confidence: float
     created_at: datetime
 
@@ -89,9 +88,9 @@ class ReviewSummary(BaseModel):
     pr_number: int
     pr_title: str
     head_commit_sha: str
-    verdict: Optional[str] = None     # None while in-progress
+    verdict: str | None = None     # None while in-progress
     status: str
-    overall_confidence: Optional[float] = None
+    overall_confidence: float | None = None
     needs_human_review: bool
     finding_count: int = Field(
         description="Number of findings. Fetch GET /reviews/{id} for the full list."
@@ -116,12 +115,12 @@ class ReviewDetail(BaseModel):
     pr_number: int
     pr_title: str
     head_commit_sha: str
-    verdict: Optional[str] = None
+    verdict: str | None = None
     status: str
-    overall_confidence: Optional[float] = None
+    overall_confidence: float | None = None
     needs_human_review: bool
     human_review_reason: str
-    github_review_id: Optional[int] = None
+    github_review_id: int | None = None
     findings: list[FindingResponse]
     created_at: datetime
     updated_at: datetime
@@ -153,7 +152,7 @@ class QueueItem(BaseModel):
     # needs_human_review=True means low confidence — human should inspect before posting.
     needs_human_review: bool
     human_review_reason: str
-    overall_confidence: Optional[float] = None
+    overall_confidence: float | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

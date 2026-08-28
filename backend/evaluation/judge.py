@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from backend.tools.llm_client import LLMClient
 
-from backend.evaluation.golden_dataset import GoldenPR, ExpectedFinding
+from backend.evaluation.golden_dataset import GoldenPR
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class PRReviewJudge:
         )
     """
 
-    def __init__(self, llm_client: "LLMClient") -> None:
+    def __init__(self, llm_client: LLMClient) -> None:
         # Injected dependency -- never construct LLMClient inside the judge.
         # This makes the judge testable without network calls.
         self._llm = llm_client
@@ -256,8 +256,7 @@ class PRReviewJudge:
         # Strip markdown code fences if the LLM wraps JSON in ```json ... ```
         if raw.startswith("```"):
             raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
+            raw = raw.removeprefix("json")
             raw = raw.strip()
 
         result = json.loads(raw)

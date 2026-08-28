@@ -32,15 +32,14 @@ import os
 import sys
 import time
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 # ─── path setup ───────────────────────────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # ──────────────────────────────────────────────────────────────────────────────
 
 # SQLAlchemy async + aiosqlite for in-memory Postgres simulation
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy import event
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # ─── logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -69,6 +68,7 @@ def fail(name: str, reason: str):
 # We create all tables fresh before each test that needs DB.
 
 from backend.database.models import Base  # all ORM models
+
 
 async def make_test_engine():
     engine = create_async_engine(
@@ -218,7 +218,6 @@ async def test_enqueue_writes_postgres_and_redis():
 
         # Assert Postgres row exists
         async with factory() as session:
-            from sqlalchemy import select
             from backend.database.models import HITLReview
             row = await session.get(HITLReview, hitl_id)
             assert row is not None, "HITLReview row not found in DB"
@@ -288,22 +287,21 @@ async def test_resolve_dispute_approve():
         # Pre-insert a HITLReview row in pending status
         hitl_id = str(uuid.uuid4())
         review_id = str(uuid.uuid4())
-        from backend.database.models import HITLReview, HITLFeedback
+        from backend.database.models import HITLReview
 
-        async with factory() as session:
-            async with session.begin():
-                row = HITLReview(
-                    id=hitl_id,
-                    review_id=review_id,
-                    repo_full_name="async-ar15/mira-test-repo",
-                    pr_number=2,
-                    agent_verdict="REQUEST_CHANGES",
-                    escalation_reason="low confidence",
-                    findings_snapshot=json.dumps([]),
-                    overall_confidence=0.35,
-                    status="pending",
-                )
-                session.add(row)
+        async with factory() as session, session.begin():
+            row = HITLReview(
+                id=hitl_id,
+                review_id=review_id,
+                repo_full_name="async-ar15/mira-test-repo",
+                pr_number=2,
+                agent_verdict="REQUEST_CHANGES",
+                escalation_reason="low confidence",
+                findings_snapshot=json.dumps([]),
+                overall_confidence=0.35,
+                status="pending",
+            )
+            session.add(row)
 
         # Mock github_client (duck-typed stub)
         mock_github = AsyncMock()
@@ -315,13 +313,13 @@ async def test_resolve_dispute_approve():
 
             mock_feedback.return_value = str(uuid.uuid4())
 
-            from backend.hitl.dispute import resolve_dispute, DisputeRequest
-
             # SQLite doesn't support SELECT FOR UPDATE — we patch with_for_update()
             # to be a no-op so the test can run without a real Postgres.
             # WHY: with_for_update() is a Postgres-specific lock. The logic is still
             # tested — only the locking mechanism is skipped in SQLite.
             from sqlalchemy import select
+
+            from backend.hitl.dispute import DisputeRequest, resolve_dispute
             original_select = select
 
             # Pass a bare session (no active transaction) — resolve_dispute
@@ -336,6 +334,7 @@ async def test_resolve_dispute_approve():
 
                 # Patch with_for_update to no-op for SQLite compatibility
                 from unittest.mock import patch as _patch
+
                 import sqlalchemy
 
                 def mock_select(*args, **kwargs):
@@ -376,28 +375,28 @@ async def test_resolve_dispute_double_claim():
         review_id = str(uuid.uuid4())
         from backend.database.models import HITLReview
 
-        async with factory() as session:
-            async with session.begin():
-                row = HITLReview(
-                    id=hitl_id,
-                    review_id=review_id,
-                    repo_full_name="async-ar15/mira-test-repo",
-                    pr_number=4,
-                    agent_verdict="BLOCK",
-                    escalation_reason="3 critical",
-                    findings_snapshot=json.dumps([]),
-                    overall_confidence=0.70,
-                    status="approved",   # already resolved
-                )
-                session.add(row)
+        async with factory() as session, session.begin():
+            row = HITLReview(
+                id=hitl_id,
+                review_id=review_id,
+                repo_full_name="async-ar15/mira-test-repo",
+                pr_number=4,
+                agent_verdict="BLOCK",
+                escalation_reason="3 critical",
+                findings_snapshot=json.dumps([]),
+                overall_confidence=0.70,
+                status="approved",   # already resolved
+            )
+            session.add(row)
 
         mock_github = AsyncMock()
 
         with patch("backend.hitl.feedback.get_session_factory", return_value=factory), \
              patch("backend.hitl.dispute.record_feedback", new_callable=AsyncMock):
 
-            from backend.hitl.dispute import resolve_dispute, DisputeRequest
             import sqlalchemy
+
+            from backend.hitl.dispute import DisputeRequest, resolve_dispute
 
             def mock_select(*args, **kwargs):
                 stmt = sqlalchemy.select(*args, **kwargs)

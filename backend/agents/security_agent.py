@@ -34,8 +34,8 @@
 # For "possible" vulnerabilities (requires runtime context): 0.5-0.7.
 # These lower-confidence findings go to HITL queue automatically.
 
-from backend.models.enums import AgentType
 from backend.agents.base_agent import BaseAgent
+from backend.models.enums import AgentType
 
 
 class SecurityAgent(BaseAgent):

@@ -345,7 +345,7 @@ class BaseAgent(ABC):
                 findings=[],
                 confidence=0.3,   # Low confidence -> HITL
                 tokens_used=0,
-                error_message=f"LLM call failed: {str(e)}",
+                error_message=f"LLM call failed: {e!s}",
                 per_verdict=AgentVerdict.APPROVE,  # no positive evidence of issues
             )
 

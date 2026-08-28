@@ -15,16 +15,29 @@ Groups:
   E — Integration     (3 tests)
 """
 
-import sys
-import os
 import asyncio
+import os
+import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-import pytest
 import time
+
+import pytest
+
+from backend.reliability.circuit_breaker import (
+    BreakerConfig,
+    BreakerState,
+    CircuitBreaker,
+    CircuitOpenError,
+)
+from backend.reliability.idempotency import (
+    InMemoryIdempotencyStore,
+    JobDeduplicator,
+    idempotency_guard,
+)
 
 # ---------------------------------------------------------------------------
 # Imports from reliability module
@@ -32,24 +45,13 @@ import time
 from backend.reliability.retry import (
     RetryConfig,
     RetryExhaustedError,
-    retry_with_backoff,
     async_retry_with_backoff,
-)
-from backend.reliability.circuit_breaker import (
-    BreakerState,
-    BreakerConfig,
-    CircuitBreaker,
-    CircuitOpenError,
+    retry_with_backoff,
 )
 from backend.reliability.timeout import (
     AgentTimeoutError,
-    with_timeout,
     run_agents_with_per_agent_timeout,
-)
-from backend.reliability.idempotency import (
-    InMemoryIdempotencyStore,
-    idempotency_guard,
-    JobDeduplicator,
+    with_timeout,
 )
 
 # ---------------------------------------------------------------------------
@@ -131,7 +133,7 @@ class TestRetry:
         async def coro():
             calls.append(1)
             if len(calls) < 2:
-                raise IOError("async transient")
+                raise OSError("async transient")
             return "async_ok"
 
         result = await async_retry_with_backoff(coro, ZERO_DELAY_2)

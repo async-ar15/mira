@@ -1,22 +1,20 @@
 """Phase 5 smoke test."""
 import asyncio
-import sys
-
-from backend.models.enums import AgentType, FindingSeverity, FindingCategory
-from backend.models.findings import AgentFinding, AgentFindingRaw
-from backend.agents.base_agent import (
-    _truncate_to_budget,
-    _build_system_prompt,
-    _apply_output_guardrail,
-    AgentOutput,
-)
-from backend.tools.model_router import get_model_config
-from backend.agents.security_agent import SecurityAgent
-from backend.agents.quality_agent import QualityAgent
-from backend.agents.test_agent import TestAgent
-from backend.agents.docs_agent import DocsAgent
-from backend.tools.llm_client import LLMResponse
 from unittest.mock import AsyncMock, MagicMock
+
+from backend.agents.base_agent import (
+    _apply_output_guardrail,
+    _build_system_prompt,
+    _truncate_to_budget,
+)
+from backend.agents.docs_agent import DocsAgent
+from backend.agents.quality_agent import QualityAgent
+from backend.agents.security_agent import SecurityAgent
+from backend.agents.test_agent import TestAgent
+from backend.models.enums import AgentType, FindingCategory, FindingSeverity
+from backend.models.findings import AgentFinding, AgentFindingRaw
+from backend.tools.llm_client import LLMResponse
+from backend.tools.model_router import get_model_config
 
 print("PHASE 5 SMOKE TEST")
 print("=" * 60)
@@ -95,7 +93,7 @@ print(f"  Case B (list directly): {len(f2)} finding  OK")
 # Case C: invalid JSON
 f3, c3 = _apply_output_guardrail(make_resp({}, valid=False), "security")
 assert len(f3) == 0 and c3 == 0.3
-print(f"  Case C (invalid JSON): empty findings, conf=0.3 -> HITL  OK")
+print("  Case C (invalid JSON): empty findings, conf=0.3 -> HITL  OK")
 
 # Case D: wrong key 'issues'
 f4, c4 = _apply_output_guardrail(
@@ -107,7 +105,7 @@ print(f"  Case D (wrong key 'issues'): {len(f4)} finding recovered  OK")
 # Case E: empty findings list
 f5, c5 = _apply_output_guardrail(make_resp({"findings": []}), "docs")
 assert len(f5) == 0 and c5 == 0.7
-print(f"  Case E (empty findings): conf=0.7 (conservative)  OK")
+print("  Case E (empty findings): conf=0.7 (conservative)  OK")
 
 # ── TEST 7: Model router ──────────────────────────────────────────────────────
 print("\n[7] Model router")

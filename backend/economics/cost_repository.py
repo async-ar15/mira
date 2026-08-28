@@ -19,13 +19,12 @@
 
 from __future__ import annotations
 
-import asyncpg  # noqa: F401 — used in type hints
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
+import asyncpg
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -50,7 +49,7 @@ def _new_session() -> AsyncSession:
 # ---------------------------------------------------------------------------
 async def record_llm_call(
     *,
-    workflow_id: Optional[str],
+    workflow_id: str | None,
     agent_type: str,
     model: str,
     input_tokens: int,
@@ -91,13 +90,13 @@ async def record_llm_call(
 # ---------------------------------------------------------------------------
 def _utc_today_start() -> datetime:
     """Return midnight UTC of the current day."""
-    now = datetime.now(timezone.utc)
-    return datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    now = datetime.now(UTC)
+    return datetime(now.year, now.month, now.day, tzinfo=UTC)
 
 
 async def get_daily_spend(
     *,
-    at: Optional[datetime] = None,
+    at: datetime | None = None,
 ) -> float:
     """
     Total USD spent so far in the current UTC day (or the day containing `at`).
@@ -105,8 +104,8 @@ async def get_daily_spend(
     Used by BudgetGuard before each agent LLM call. Returns 0.0 if the table
     is empty or unreachable (fail-open: never block on telemetry failure).
     """
-    target = at or datetime.now(timezone.utc)
-    day_start = datetime(target.year, target.month, target.day, tzinfo=timezone.utc)
+    target = at or datetime.now(UTC)
+    day_start = datetime(target.year, target.month, target.day, tzinfo=UTC)
     day_end = day_start + timedelta(days=1)
 
     try:
@@ -186,7 +185,7 @@ async def get_summary() -> EconomicsSummary:
 
     The dashboard's primary cost card consumes this single endpoint.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     today_start = _utc_today_start()
     d7_start = today_start - timedelta(days=6)   # inclusive of today = 7 days
     d30_start = today_start - timedelta(days=29) # inclusive of today = 30 days
@@ -257,7 +256,7 @@ async def get_daily_timeseries(days: int = 30) -> list[DailyPoint]:
 
     buckets: dict[str, list[float]] = defaultdict(lambda: [0.0, 0])  # [cost, count]
     for r in rows:
-        key = r.created_at.astimezone(timezone.utc).strftime("%Y-%m-%d")
+        key = r.created_at.astimezone(UTC).strftime("%Y-%m-%d")
         buckets[key][0] += r.cost_usd
         buckets[key][1] += 1
 
@@ -275,7 +274,7 @@ async def get_daily_timeseries(days: int = 30) -> list[DailyPoint]:
 # ---------------------------------------------------------------------------
 
 async def get_agent_health(
-    pool: "asyncpg.Pool",
+    pool: asyncpg.Pool,
     minutes: int = 60,
 ) -> list[dict]:
     """
@@ -298,14 +297,13 @@ async def get_agent_health(
         WHERE bucket >= now() - make_interval(mins => $1)
         ORDER BY bucket DESC, agent
     """
-    import asyncpg
     async with pool.acquire() as conn:
         rows = await conn.fetch(sql, minutes)
     return [dict(r) for r in rows]
 
 
 async def get_pr_cost(
-    pool: "asyncpg.Pool",
+    pool: asyncpg.Pool,
     review_id: str,
 ) -> dict | None:
     """
@@ -324,14 +322,15 @@ async def get_pr_cost(
         WHERE review_id = $1
         GROUP BY review_id
     """
-    import asyncpg, uuid
+    import uuid
+
     async with pool.acquire() as conn:
         row = await conn.fetchrow(sql, uuid.UUID(review_id))
     return dict(row) if row else None
 
 
 async def get_daily_cost_from_tiger(
-    pool: "asyncpg.Pool",
+    pool: asyncpg.Pool,
 ) -> float:
     """
     Total LLM cost over the last 24h from the agent_health_1m aggregate.
@@ -342,6 +341,5 @@ async def get_daily_cost_from_tiger(
         FROM agent_health_1m
         WHERE bucket >= now() - INTERVAL '24 hours'
     """
-    import asyncpg
     async with pool.acquire() as conn:
         return float(await conn.fetchval(sql))

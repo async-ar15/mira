@@ -23,9 +23,8 @@
 # All tests are synchronous where possible (no LLM calls, no DB).
 # aggregate_results tests mock the state dict directly.
 
-import asyncio
 from dataclasses import FrozenInstanceError
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -350,8 +349,8 @@ async def test_safety_threshold_one_critical_block():
     Safety-Threshold Rule: only 1 -> do NOT escalate to HITL.
     Result: REQUEST_CHANGES (because there are HIGH findings from that agent).
     """
-    from backend.orchestrator.nodes import aggregate_results
     from backend.models.enums import ReviewVerdict
+    from backend.orchestrator.nodes import aggregate_results
 
     # Security agent: CRITICAL_BLOCK verdict, has a critical finding
     security = _make_agent_result(
@@ -386,8 +385,8 @@ async def test_safety_threshold_two_critical_blocks():
     2 agents say CRITICAL_BLOCK.
     Safety-Threshold Rule: 2+ -> escalate to NEEDS_HUMAN_REVIEW.
     """
-    from backend.orchestrator.nodes import aggregate_results
     from backend.models.enums import ReviewVerdict
+    from backend.orchestrator.nodes import aggregate_results
 
     security = _make_agent_result(
         "security", success=True,
@@ -422,8 +421,8 @@ async def test_verdict_breakdown_always_emitted():
     verdict_breakdown is present in the return dict for EVERY verdict type.
     Tests the APPROVE path (no issues found).
     """
-    from backend.orchestrator.nodes import aggregate_results
     from backend.models.enums import ReviewVerdict
+    from backend.orchestrator.nodes import aggregate_results
 
     results = [
         _make_agent_result("security", per_verdict="approve", confidence=0.9),
@@ -508,8 +507,8 @@ async def test_partial_review_flag():
 @pytest.mark.asyncio
 async def test_rule1_security_failure_hitl():
     """Security agent failure -> NEEDS_HUMAN_REVIEW regardless of others."""
-    from backend.orchestrator.nodes import aggregate_results
     from backend.models.enums import ReviewVerdict
+    from backend.orchestrator.nodes import aggregate_results
 
     results = [
         _make_agent_result("security", success=False, error_message="LLM timeout",
@@ -536,8 +535,8 @@ async def test_rule4_too_few_agents_hitl():
     Only 1 agent succeeded (quality) + security is ok but quality only gives us 1 success.
     Wait — security must succeed for Rule 4 to be checked. Let's have security + 0 others.
     """
-    from backend.orchestrator.nodes import aggregate_results
     from backend.models.enums import ReviewVerdict
+    from backend.orchestrator.nodes import aggregate_results
 
     results = [
         _make_agent_result("security", per_verdict="approve", confidence=0.9),
@@ -563,8 +562,8 @@ async def test_rule4_too_few_agents_hitl():
 @pytest.mark.asyncio
 async def test_rule3_low_confidence_hitl():
     """Low overall confidence -> NEEDS_HUMAN_REVIEW."""
-    from backend.orchestrator.nodes import aggregate_results
     from backend.models.enums import ReviewVerdict
+    from backend.orchestrator.nodes import aggregate_results
 
     results = [
         _make_agent_result("security", per_verdict="approve", confidence=0.5),

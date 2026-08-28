@@ -29,30 +29,28 @@
 #   (no lifespan= parameter on ASGITransport means it never calls startup/shutdown).
 #   This gives us pure HTTP adapter tests with zero infrastructure.
 
+# ---------------------------------------------------------------------------
+# Set required env vars BEFORE importing anything from the backend.
+# Settings validation runs at import time.
+# ---------------------------------------------------------------------------
+import os
 import uuid
-from datetime import datetime, timezone
-from typing import AsyncGenerator
-from unittest.mock import AsyncMock, patch
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-# ---------------------------------------------------------------------------
-# Set required env vars BEFORE importing anything from the backend.
-# Settings validation runs at import time.
-# ---------------------------------------------------------------------------
-
-import os
 os.environ.setdefault("GITHUB_WEBHOOK_SECRET", "test-secret")
 os.environ.setdefault("GITHUB_TOKEN", "test-token")
 os.environ.setdefault("GOOGLE_API_KEY", "test-key")
 os.environ.setdefault("APP_ENV", "development")
 
 from backend.config.settings import Settings, get_settings
+from backend.database.models import FindingRecord, PRReviewRecord
 from backend.database.postgres import Base, get_db
-from backend.database.models import PRReviewRecord, FindingRecord
 from backend.main import app
 
 # ---------------------------------------------------------------------------
@@ -189,7 +187,7 @@ async def _insert_review(
     connection sees the inserted rows immediately.
     """
     review_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     async with TestSessionLocal() as session:
         review = PRReviewRecord(

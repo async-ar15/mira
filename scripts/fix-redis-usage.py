@@ -9,7 +9,6 @@ This makes minimal changes to reduce repeated Redis calls:
 Run this from the project root after activating your venv.
 """
 
-import os
 import sys
 from pathlib import Path
 

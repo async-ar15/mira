@@ -24,12 +24,21 @@
 # engine interface (stable from Phase 3 onwards).
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from backend.config import get_settings
-from backend.core.workflow_engine import AgentFindingSummary, WorkflowEngine, WorkflowResult
-from backend.models.enums import FindingCategory, FindingSeverity, ReviewStatus, ReviewVerdict
+from backend.core.workflow_engine import (
+    AgentFindingSummary,
+    WorkflowEngine,
+    WorkflowResult,
+)
+from backend.models.enums import (
+    FindingCategory,
+    FindingSeverity,
+    ReviewStatus,
+    ReviewVerdict,
+)
 from backend.orchestrator.graph import review_graph
 from backend.orchestrator.state import PRReviewState
 
@@ -164,7 +173,7 @@ class LangGraphEngine(WorkflowEngine):
             agents_completed=agents_completed,
             agents_failed=agents_failed,
             started_at=started_at,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(UTC),
             error_message="",
             metadata={
                 "overall_confidence": final_state.get("overall_confidence", 0.0),
@@ -189,7 +198,7 @@ class LangGraphEngine(WorkflowEngine):
           If COMPLETED: verdict is set, findings are populated.
           If FAILED: error_message is set.
         """
-        started_at = datetime.now(timezone.utc)
+        started_at = datetime.now(UTC)
         logger.info("engine.run | workflow_id=%s", workflow_id)
 
         # Build the initial state with what we know from the webhook event
@@ -229,8 +238,8 @@ class LangGraphEngine(WorkflowEngine):
                 agents_completed=0,
                 agents_failed=4,
                 started_at=started_at,
-                completed_at=datetime.now(timezone.utc),
-                error_message=f"{type(e).__name__}: {str(e)}",
+                completed_at=datetime.now(UTC),
+                error_message=f"{type(e).__name__}: {e!s}",
             )
 
     async def resume(
@@ -258,7 +267,7 @@ class LangGraphEngine(WorkflowEngine):
         the graph has no checkpoint to resume from — so we re-run from start.
         This will be fixed when we wire in RedisSaver.
         """
-        started_at = datetime.now(timezone.utc)
+        started_at = datetime.now(UTC)
         logger.info("engine.resume | workflow_id=%s", workflow_id)
 
         config = {"configurable": {"thread_id": workflow_id}}
@@ -285,8 +294,8 @@ class LangGraphEngine(WorkflowEngine):
                 verdict=None,
                 findings=[],
                 started_at=started_at,
-                completed_at=datetime.now(timezone.utc),
-                error_message=f"Resume failed: {type(e).__name__}: {str(e)}",
+                completed_at=datetime.now(UTC),
+                error_message=f"Resume failed: {type(e).__name__}: {e!s}",
             )
 
     async def get_state(
@@ -316,7 +325,7 @@ class LangGraphEngine(WorkflowEngine):
             return self._state_to_result(
                 workflow_id,
                 state_snapshot.values,
-                datetime.now(timezone.utc),
+                datetime.now(UTC),
             )
 
         except Exception as e:

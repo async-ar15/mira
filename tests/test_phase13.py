@@ -9,9 +9,9 @@ No Docker required. Tests verify:
   C — fixtures/sample_pr_opened.json is valid and has correct schema
 """
 
-import sys
-import os
 import json
+import os
+import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
@@ -35,17 +35,17 @@ os.environ.setdefault("GOOGLE_API_KEY", "sk-test")
 # Clear lru_cache so Settings picks up the env vars we just set
 # (cache may already be populated if another test file ran first).
 from backend.config.settings import get_settings
+
 get_settings.cache_clear()
 
 # Import backend.main NOW (env vars are set, cache cleared above).
 # All subsequent patch() calls patch the already-loaded module's attributes,
 # which is the correct pattern — no re-import needed per test.
-import backend.main as _main_module  # noqa: E402 (intentional late import)
 
 import pytest
-from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
+import backend.main as _main_module
 
 # ===========================================================================
 # GROUP A — /health endpoints
@@ -72,7 +72,8 @@ class TestHealthEndpoints:
           Same rule applies to init_db and ensure_collection which are also imported
           names in backend.main's namespace.
         """
-        from unittest.mock import patch as _patch, AsyncMock as _AM
+        from unittest.mock import AsyncMock as _AM
+        from unittest.mock import patch as _patch
         breakers = breakers or []
         return [
             # Lifespan: redis_client is an instance; patch its methods directly.
@@ -95,6 +96,7 @@ class TestHealthEndpoints:
         so no real Redis/Postgres/Qdrant needed.
         """
         from contextlib import ExitStack
+
         from fastapi.testclient import TestClient
         with ExitStack() as stack:
             for p in self._all_mocks():

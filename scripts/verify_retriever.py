@@ -7,9 +7,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from backend.config.settings import get_settings
 from backend.database.postgres import init_tiger_schema
+from backend.memory.context_retriever import retrieve_context_for_diff
 from backend.memory.embedder import embed_text
 from backend.memory.tiger_client import CodeChunk, get_tiger_memory
-from backend.memory.context_retriever import retrieve_context_for_diff
+
 
 async def run_sanity_check():
     print("1. Loading settings...")

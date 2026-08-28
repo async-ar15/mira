@@ -17,8 +17,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -511,9 +510,9 @@ def load_golden_dataset() -> list[GoldenPR]:
 
 def get_slice(
     *,
-    difficulty: Optional[str] = None,
-    category: Optional[str] = None,
-    expected_verdict: Optional[str] = None,
+    difficulty: str | None = None,
+    category: str | None = None,
+    expected_verdict: str | None = None,
 ) -> list[GoldenPR]:
     """
     Filter the golden dataset by one or more slice dimensions.

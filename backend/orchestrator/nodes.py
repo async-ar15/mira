@@ -47,8 +47,17 @@ import time
 from typing import Any
 
 from backend.config import get_settings
-from backend.integrations.github_client import GitHubClient, GitHubAPIError, GitHubNotFoundError, GitHubRateLimitError
-from backend.integrations.github_models import PostReviewPayload, ReviewEvent, ReviewComment
+from backend.integrations.github_client import (
+    GitHubAPIError,
+    GitHubClient,
+    GitHubNotFoundError,
+    GitHubRateLimitError,
+)
+from backend.integrations.github_models import (
+    PostReviewPayload,
+    ReviewComment,
+    ReviewEvent,
+)
 from backend.memory.context_retriever import retrieve_context_for_diff
 from backend.models.enums import FindingSeverity, ReviewStatus, ReviewVerdict
 from backend.orchestrator.state import AgentResultState, PRReviewState
@@ -309,7 +318,7 @@ async def _run_single_agent(
             per_verdict=per_verdict_str,    # Phase 8: persist per-agent verdict in state
         )
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         duration = time.monotonic() - start_time
         error = f"{agent_type} agent timed out after {_AGENT_TIMEOUTS.get(agent_type, 45)}s"
         logger.warning(
@@ -330,7 +339,7 @@ async def _run_single_agent(
 
     except Exception as e:
         duration = time.monotonic() - start_time
-        error = f"{agent_type} agent raised: {type(e).__name__}: {str(e)}"
+        error = f"{agent_type} agent raised: {type(e).__name__}: {e!s}"
         logger.error(
             "agent_error | agent=%s workflow=%s error=%s",
             agent_type,
@@ -397,7 +406,7 @@ async def fan_out_agents(state: PRReviewState) -> dict[str, Any]:
             results.append(AgentResultState(
                 agent_type=agent_type,
                 success=False,
-                error_message=f"Unexpected: {str(result)}",
+                error_message=f"Unexpected: {result!s}",
                 duration_seconds=0.0,
                 findings=[],
                 confidence=0.0,
@@ -870,9 +879,10 @@ async def post_review(state: PRReviewState) -> dict[str, Any]:
         # BUG FIX (demo-day Bug #5): Save to DB even when GitHub post fails.
         # Review was generated — we must not lose it just because rate limit hit.
         try:
+            from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
             from backend.database.postgres import get_engine
             from backend.database.repository import save_review
-            from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
             _factory = async_sessionmaker(
                 bind=get_engine(), class_=AsyncSession, expire_on_commit=False
             )
@@ -912,9 +922,10 @@ async def post_review(state: PRReviewState) -> dict[str, Any]:
             state["workflow_id"],
         )
         try:
+            from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
             from backend.database.postgres import get_engine
             from backend.database.repository import save_review
-            from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
             _factory = async_sessionmaker(
                 bind=get_engine(), class_=AsyncSession, expire_on_commit=False
             )
@@ -959,9 +970,10 @@ async def post_review(state: PRReviewState) -> dict[str, Any]:
         # This is the key demo path: the repo is fake so GitHub returns 401,
         # but the LLM analysis is real and must be persisted.
         try:
+            from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
             from backend.database.postgres import get_engine
             from backend.database.repository import save_review
-            from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
             _factory = async_sessionmaker(
                 bind=get_engine(), class_=AsyncSession, expire_on_commit=False
             )
@@ -1010,9 +1022,10 @@ async def post_review(state: PRReviewState) -> dict[str, Any]:
     #      from the GitHub audit log (Phase 19).
     # -------------------------------------------------------------------------
     try:
+        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
         from backend.database.postgres import get_engine
         from backend.database.repository import save_review
-        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
         _factory = async_sessionmaker(
             bind=get_engine(), class_=AsyncSession, expire_on_commit=False
         )
@@ -1394,11 +1407,11 @@ async def _call_agent_real(
     Returns:
         (finding_dicts, confidence, per_verdict_string)
     """
-    from backend.agents.security_agent import SecurityAgent
-    from backend.agents.quality_agent import QualityAgent
-    from backend.agents.test_agent import TestAgent
-    from backend.agents.docs_agent import DocsAgent
     from backend.agents.contracts import AgentTask
+    from backend.agents.docs_agent import DocsAgent
+    from backend.agents.quality_agent import QualityAgent
+    from backend.agents.security_agent import SecurityAgent
+    from backend.agents.test_agent import TestAgent
     from backend.models.enums import AgentType
 
     # Map string agent_type to the class and enum

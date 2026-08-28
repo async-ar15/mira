@@ -21,7 +21,6 @@ class PRReviewAgentError(Exception):
     This lets callers catch all our exceptions with a single except clause
     if they want to, while still being able to catch specific ones.
     """
-    pass
 
 
 # -----------------------------------------------------------------------------
@@ -34,7 +33,6 @@ class WebhookValidationError(PRReviewAgentError):
     This means the request did not come from GitHub, or the secret is wrong.
     The webhook receiver should return HTTP 401 when this is raised.
     """
-    pass
 
 
 class WebhookParseError(PRReviewAgentError):
@@ -44,7 +42,6 @@ class WebhookParseError(PRReviewAgentError):
     or we received an event type we do not support.
     The webhook receiver should return HTTP 400 when this is raised.
     """
-    pass
 
 
 # -----------------------------------------------------------------------------
@@ -58,7 +55,6 @@ class JobEnqueueError(PRReviewAgentError):
     The webhook receiver should return HTTP 503 when this is raised
     so GitHub knows to retry the webhook delivery.
     """
-    pass
 
 
 class DuplicateJobError(PRReviewAgentError):
@@ -67,7 +63,6 @@ class DuplicateJobError(PRReviewAgentError):
     This is the idempotency check - GitHub replays webhooks on timeout.
     Not an error per se - the caller should return HTTP 200 silently.
     """
-    pass
 
 
 class DuplicateWebhookError(PRReviewAgentError):
@@ -101,7 +96,6 @@ class WorkflowTimeoutError(WorkflowError):
     Raised when the agent workflow exceeds its maximum allowed time.
     This is the circuit breaker for infinite agent loops.
     """
-    pass
 
 
 class WorkflowNotFoundError(WorkflowError):
@@ -110,7 +104,6 @@ class WorkflowNotFoundError(WorkflowError):
     Can occur if a job is dequeued after its checkpoint expired, or if the
     workflow_id was generated incorrectly.
     """
-    pass
 
 
 # -----------------------------------------------------------------------------
@@ -134,7 +127,6 @@ class AgentOutputValidationError(AgentError):
     This means the LLM returned something in the wrong format.
     The caller should retry with a stricter output prompt.
     """
-    pass
 
 
 # -----------------------------------------------------------------------------
@@ -184,7 +176,6 @@ class ConfigurationError(PRReviewAgentError):
     Raised when a required environment variable is missing or has an invalid value.
     This should only happen at startup. If it happens at runtime, something is very wrong.
     """
-    pass
 
 
 # -----------------------------------------------------------------------------

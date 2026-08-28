@@ -13,8 +13,8 @@
 #   - backend.webhook_receiver (callers, not callees)
 #
 # EXPORTS:
+from backend.orchestrator.graph import review_graph
 from backend.orchestrator.langgraph_engine import LangGraphEngine
 from backend.orchestrator.state import PRReviewState
-from backend.orchestrator.graph import review_graph
 
 __all__ = ["LangGraphEngine", "PRReviewState", "review_graph"]

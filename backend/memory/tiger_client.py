@@ -42,10 +42,9 @@
 from __future__ import annotations
 
 import logging
-import math
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import asyncpg
@@ -96,7 +95,7 @@ class CodeChunk:
     chunk_index: int = 0
     symbol: str | None = None
     token_count: int | None = None
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
 

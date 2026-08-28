@@ -33,10 +33,11 @@
 
 from __future__ import annotations
 
-import re
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Callable
+import re
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -442,6 +443,7 @@ def _search_similar_findings_handler(args: dict[str, Any]) -> dict[str, Any]:
     try:
         # Import the existing memory layer (Phase 6) — lazy to keep dependency direction
         from backend.memory.embedder import embed_text
+
         # TIGER: was qdrant_client.search_similar_code
         from backend.memory.tiger_client import get_tiger_memory
         # TODO: wire embedding + repo args — see context_retriever.py for pattern

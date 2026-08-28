@@ -13,8 +13,8 @@ Groups:
   E — Integration      (3 tests)
 """
 
-import sys
 import os
+import sys
 
 # ---------------------------------------------------------------------------
 # Path setup — ensures "backend.*" imports resolve from repo root
@@ -25,34 +25,34 @@ if REPO_ROOT not in sys.path:
 
 import pytest
 
-# ---------------------------------------------------------------------------
-# Imports from security module
-# ---------------------------------------------------------------------------
-from backend.security.masking import (
-    MaskingPolicy,
-    MaskingContext,
-    unmask_text,
-)
 from backend.security.injection_guard import (
     InjectionSeverity,
     PromptInjectionDetector,
     check_pr_for_injection,
 )
+
+# ---------------------------------------------------------------------------
+# Imports from security module
+# ---------------------------------------------------------------------------
+from backend.security.masking import (
+    MaskingContext,
+    MaskingPolicy,
+    unmask_text,
+)
 from backend.security.rbac import (
-    Role,
     Permission,
-    RBACPolicy,
     PermissionDeniedError,
+    RBACPolicy,
+    Role,
 )
 from backend.security.threat_model import (
-    ThreatVector,
-    ThreatSeverity,
     RecommendedAction,
     ThreatAssessment,
-    assess_pr_diff,
+    ThreatSeverity,
+    ThreatVector,
     add_malformed_webhook_threat,
+    assess_pr_diff,
 )
-
 
 # ===========================================================================
 # GROUP A — Masking

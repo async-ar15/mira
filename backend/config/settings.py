@@ -222,7 +222,7 @@ class Settings(BaseSettings):
         return self.app_env == "production"
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Returns the Settings singleton.

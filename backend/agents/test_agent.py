@@ -13,8 +13,8 @@
 #   - Mocks that don't verify the contract they're replacing
 #   - Test functions that have no assertions (assert-free tests always pass)
 
-from backend.models.enums import AgentType
 from backend.agents.base_agent import BaseAgent
+from backend.models.enums import AgentType
 
 
 class TestAgent(BaseAgent):

@@ -232,8 +232,8 @@ async def submit_decision(
     # Real module path: backend.integrations.github_client (NOT backend.github.client).
     # GitHubClient takes a Settings object and is an async context manager
     # (httpx.AsyncClient connection pool lifecycle).
-    from backend.integrations.github_client import GitHubClient
     from backend.config import get_settings
+    from backend.integrations.github_client import GitHubClient
 
     settings = get_settings()
 

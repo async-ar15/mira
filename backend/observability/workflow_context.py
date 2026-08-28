@@ -21,12 +21,11 @@ from __future__ import annotations
 
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
 class WorkflowContext:
-    workflow_id: Optional[str]
+    workflow_id: str | None
     agent_type: str    # "security", "quality", "system", etc.
 
 
@@ -43,7 +42,7 @@ def get_workflow_context() -> WorkflowContext:
     return _current.get()
 
 
-def set_workflow_context(*, workflow_id: Optional[str], agent_type: str) -> Token:
+def set_workflow_context(*, workflow_id: str | None, agent_type: str) -> Token:
     """
     Push a new context onto the stack. Returns a token to pass to reset().
 

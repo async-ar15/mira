@@ -29,7 +29,6 @@ from backend.models.enums import (
     ReviewVerdict,
 )
 
-
 # -----------------------------------------------------------------------------
 # Finding
 # The atomic unit of a PR review. One issue. One agent. One location in code.

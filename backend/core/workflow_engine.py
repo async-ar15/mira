@@ -31,8 +31,12 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from backend.models.enums import FindingCategory, FindingSeverity, ReviewStatus, ReviewVerdict
-
+from backend.models.enums import (
+    FindingCategory,
+    FindingSeverity,
+    ReviewStatus,
+    ReviewVerdict,
+)
 
 # -----------------------------------------------------------------------------
 # WorkflowResult - the typed return contract for WorkflowEngine

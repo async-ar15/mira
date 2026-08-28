@@ -36,9 +36,8 @@ from __future__ import annotations
 import json
 import logging
 import traceback as tb_module
-from datetime import datetime, timezone
-from typing import Any, Optional
-
+from datetime import UTC, datetime
+from typing import Any
 
 _SERVICE_NAME = "mira"
 
@@ -67,8 +66,8 @@ class StructuredLogger:
         event: str,
         message: str,
         *,
-        trace_id: Optional[str] = None,
-        span_id: Optional[str] = None,
+        trace_id: str | None = None,
+        span_id: str | None = None,
         **tags: Any,
     ) -> dict[str, Any]:
         """Build the JSON entry and write it to stdlib logging.
@@ -76,7 +75,7 @@ class StructuredLogger:
         Returns the entry dict so callers can inspect it in tests.
         """
         entry: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "service": _SERVICE_NAME,
             "logger": self._name,
             "level": logging.getLevelName(level),
@@ -101,8 +100,8 @@ class StructuredLogger:
         event: str,
         message: str,
         *,
-        trace_id: Optional[str] = None,
-        span_id: Optional[str] = None,
+        trace_id: str | None = None,
+        span_id: str | None = None,
         **tags: Any,
     ) -> dict[str, Any]:
         return self._emit(
@@ -115,8 +114,8 @@ class StructuredLogger:
         event: str,
         message: str,
         *,
-        trace_id: Optional[str] = None,
-        span_id: Optional[str] = None,
+        trace_id: str | None = None,
+        span_id: str | None = None,
         **tags: Any,
     ) -> dict[str, Any]:
         return self._emit(
@@ -129,9 +128,9 @@ class StructuredLogger:
         event: str,
         message: str,
         *,
-        trace_id: Optional[str] = None,
-        span_id: Optional[str] = None,
-        exc: Optional[Exception] = None,
+        trace_id: str | None = None,
+        span_id: str | None = None,
+        exc: Exception | None = None,
         **tags: Any,
     ) -> dict[str, Any]:
         """Log an error, optionally attaching exception info as a JSON field.
@@ -156,8 +155,8 @@ class StructuredLogger:
         event: str,
         message: str,
         *,
-        trace_id: Optional[str] = None,
-        span_id: Optional[str] = None,
+        trace_id: str | None = None,
+        span_id: str | None = None,
         **tags: Any,
     ) -> dict[str, Any]:
         return self._emit(
@@ -195,7 +194,7 @@ def log_llm_call(
     logger: StructuredLogger,
     *,
     trace_id: str,
-    span_id: Optional[str] = None,
+    span_id: str | None = None,
     agent_type: str,
     model: str,
     input_tokens: int,
@@ -232,13 +231,13 @@ def log_tool_call(
     logger: StructuredLogger,
     *,
     trace_id: str,
-    span_id: Optional[str] = None,
+    span_id: str | None = None,
     agent_type: str,
     tool_name: str,
     success: bool,
     latency_ms: float,
     result_length: int = 0,
-    error_message: Optional[str] = None,
+    error_message: str | None = None,
 ) -> dict[str, Any]:
     """Log one tool execution through the ToolRegistry.
 
@@ -264,7 +263,7 @@ def log_agent_verdict(
     logger: StructuredLogger,
     *,
     trace_id: str,
-    span_id: Optional[str] = None,
+    span_id: str | None = None,
     agent_type: str,
     verdict: str,
     finding_count: int,
@@ -293,7 +292,7 @@ def log_review_verdict(
     logger: StructuredLogger,
     *,
     trace_id: str,
-    span_id: Optional[str] = None,
+    span_id: str | None = None,
     final_verdict: str,
     hitl_triggered: bool,
     agent_count: int,

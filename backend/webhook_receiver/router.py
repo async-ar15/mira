@@ -44,7 +44,6 @@ from fastapi.responses import JSONResponse
 from backend.config.settings import Settings, get_settings
 from backend.core.exceptions import (
     DuplicateWebhookError,
-    JobEnqueueError,
     MemoryStoreError,
     WebhookParseError,
     WebhookValidationError,
@@ -150,7 +149,7 @@ async def receive_github_webhook(
         logger.error("Webhook payload parse error: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Could not parse webhook payload: {str(e)}",
+            detail=f"Could not parse webhook payload: {e!s}",
         ) from e
 
     # None means "valid signature, but an event type we don't handle" — not an error.

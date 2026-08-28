@@ -35,9 +35,9 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from backend.observability.events import ReviewEvent
 
@@ -59,7 +59,7 @@ class AuditLogger:
     audit sink -- the interface here stays the same, the backend swaps out.
     """
 
-    def __init__(self, path: Optional[Path] = None) -> None:
+    def __init__(self, path: Path | None = None) -> None:
         self._path = path or _DEFAULT_AUDIT_PATH
 
     # ── Write helpers ─────────────────────────────────────────────────────────
@@ -190,7 +190,7 @@ class AuditLogger:
         passed: bool,
         score: float,
         threshold: float,
-        blocked_reason: Optional[str] = None,
+        blocked_reason: str | None = None,
     ) -> None:
         """Record the outcome of a Phase 9 regression gate check.
 
@@ -253,4 +253,4 @@ class AuditLogger:
 
 def _now() -> str:
     """ISO-8601 UTC timestamp string."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()

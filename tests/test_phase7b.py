@@ -27,21 +27,19 @@
 
 import pytest
 
-from backend.tools.tool_registry import (
-    ToolRegistry,
-    ToolDefinition,
-    ToolSchema,
-    tool_registry,
-)
-from backend.tools.sandbox import Sandbox, SandboxViolationError
+from backend.models.enums import AgentType
 from backend.tools.capability_scope import (
     CapabilityViolationError,
     check_capability,
-    get_allowed_tools,
     raise_if_not_allowed,
 )
-from backend.models.enums import AgentType
-
+from backend.tools.sandbox import Sandbox, SandboxViolationError
+from backend.tools.tool_registry import (
+    ToolDefinition,
+    ToolRegistry,
+    ToolSchema,
+    tool_registry,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers

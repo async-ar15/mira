@@ -26,8 +26,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from backend.config.settings import Settings, get_settings
 from backend.economics.cost_repository import get_daily_spend
@@ -60,7 +59,7 @@ class BudgetGuard:
         # ... proceed with LLM call
     """
 
-    def __init__(self, settings: Optional[Settings] = None) -> None:
+    def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or get_settings()
 
     @property
@@ -73,7 +72,7 @@ class BudgetGuard:
 
     async def current_daily_spend_usd(self) -> float:
         """Return the cumulative USD spent in the current UTC day."""
-        return await get_daily_spend(at=datetime.now(timezone.utc))
+        return await get_daily_spend(at=datetime.now(UTC))
 
     async def check_daily_budget(self) -> None:
         """
@@ -113,5 +112,5 @@ class BudgetGuard:
             "daily_headroom_usd": round(headroom, 6),
             "daily_utilization": round(utilization, 4),
             "per_review_cap_usd": round(self.per_review_cap_usd, 4),
-            "exceeded": spent >= cap and cap > 0,
+            "exceeded": spent >= cap > 0,
         }

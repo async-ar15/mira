@@ -25,18 +25,19 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from backend.evaluation.golden_dataset import (
-    GoldenPR,
     ExpectedFinding,
-    load_golden_dataset,
+    GoldenPR,
     get_slice,
+    load_golden_dataset,
 )
-from backend.evaluation.judge import PRReviewJudge, JudgeScore, PASS_THRESHOLD
+from backend.evaluation.judge import PASS_THRESHOLD, JudgeScore, PRReviewJudge
 from backend.evaluation.regression_gate import (
-    RegressionGate,
-    EvalResult,
     PASS_THRESHOLD as GATE_PASS,
 )
-
+from backend.evaluation.regression_gate import (
+    EvalResult,
+    RegressionGate,
+)
 
 # ─────────────────────────────────────────────────────────────
 # Helpers

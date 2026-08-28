@@ -16,12 +16,12 @@ Import everything from here -- internal module structure may change.
 from __future__ import annotations
 
 from backend.observability.alerting import (
+    DEFAULT_ALERT_RULES,
     AlertLevel,
     AlertManager,
     AlertRule,
     FiredAlert,
     MetricSnapshot,
-    DEFAULT_ALERT_RULES,
 )
 from backend.observability.audit import AuditLogger
 from backend.observability.events import ReviewEvent

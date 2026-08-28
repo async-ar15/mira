@@ -31,7 +31,7 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -185,7 +185,7 @@ async def resolve_dispute(
         hitl_review.human_verdict = request.human_verdict
         hitl_review.human_reason = request.reason
         hitl_review.reviewer_id = request.reviewer_id
-        hitl_review.resolved_at = datetime.now(timezone.utc)
+        hitl_review.resolved_at = datetime.now(UTC)
 
         # Step 5: Flush within savepoint — savepoint commits on nested block exit.
         # (demo-day-readiness Bug #5 pattern: save first, post second.)
@@ -267,14 +267,13 @@ async def resolve_dispute(
 
         # Mark posted in DB (non-atomic update — best effort).
         from backend.database.postgres import get_session_factory as _sf
-        async with _sf()() as update_session:
-            async with update_session.begin():
-                r2 = await update_session.execute(
-                    select(HITLReview).where(HITLReview.id == request.hitl_review_id)
-                )
-                row = r2.scalar_one_or_none()
-                if row:
-                    row.posted_to_github = True
+        async with _sf()() as update_session, update_session.begin():
+            r2 = await update_session.execute(
+                select(HITLReview).where(HITLReview.id == request.hitl_review_id)
+            )
+            row = r2.scalar_one_or_none()
+            if row:
+                row.posted_to_github = True
 
         posted = True
         logger.info(
