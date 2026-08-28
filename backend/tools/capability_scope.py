@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 # Exceptions
 # ---------------------------------------------------------------------------
 
+
 class CapabilityViolationError(Exception):
     """
     Raised when an agent attempts to call a tool outside its capability scope.
@@ -80,6 +81,7 @@ class CapabilityViolationError(Exception):
 # CapabilityScope dataclass
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class CapabilityScope:
     """
@@ -96,6 +98,7 @@ class CapabilityScope:
         rationale:          human-readable explanation (helps reviewers understand
                             why each agent has exactly the tools it has)
     """
+
     agent_type: AgentType
     allowed_tool_names: frozenset[str]
     rationale: str
@@ -116,14 +119,15 @@ class CapabilityScope:
 # ---------------------------------------------------------------------------
 
 CAPABILITY_MAP: dict[AgentType, CapabilityScope] = {
-
     AgentType.SECURITY: CapabilityScope(
         agent_type=AgentType.SECURITY,
-        allowed_tool_names=frozenset({
-            "check_secrets_pattern",    # primary tool: deterministic secret detection
-            "search_similar_findings",  # secondary: detect systemic/repeated vuln patterns
-            "get_dependency_advisory",  # secondary: flag new deps with known CVEs
-        }),
+        allowed_tool_names=frozenset(
+            {
+                "check_secrets_pattern",  # primary tool: deterministic secret detection
+                "search_similar_findings",  # secondary: detect systemic/repeated vuln patterns
+                "get_dependency_advisory",  # secondary: flag new deps with known CVEs
+            }
+        ),
         rationale=(
             "SecurityAgent needs secret scanning (deterministic, more reliable than LLM "
             "for literal patterns), similarity search to detect systemic vulnerabilities "
@@ -131,13 +135,14 @@ CAPABILITY_MAP: dict[AgentType, CapabilityScope] = {
             "It does NOT need syntax_check — broken syntax is QualityAgent's domain."
         ),
     ),
-
     AgentType.QUALITY: CapabilityScope(
         agent_type=AgentType.QUALITY,
-        allowed_tool_names=frozenset({
-            "run_syntax_check",        # primary tool: deterministic broken-code detection
-            "search_similar_findings", # secondary: compare code quality patterns across repo
-        }),
+        allowed_tool_names=frozenset(
+            {
+                "run_syntax_check",  # primary tool: deterministic broken-code detection
+                "search_similar_findings",  # secondary: compare code quality patterns across repo
+            }
+        ),
         rationale=(
             "QualityAgent focuses on code correctness and style. Syntax checking gives it "
             "a deterministic gate for obviously broken code before spending LLM tokens on "
@@ -147,13 +152,14 @@ CAPABILITY_MAP: dict[AgentType, CapabilityScope] = {
             "check_secrets_pattern (security concern)."
         ),
     ),
-
     AgentType.TEST: CapabilityScope(
         agent_type=AgentType.TEST,
-        allowed_tool_names=frozenset({
-            "run_syntax_check",        # primary: test code itself must be syntactically valid
-            "search_similar_findings", # secondary: find existing tests to avoid duplication
-        }),
+        allowed_tool_names=frozenset(
+            {
+                "run_syntax_check",  # primary: test code itself must be syntactically valid
+                "search_similar_findings",  # secondary: find existing tests to avoid duplication
+            }
+        ),
         rationale=(
             "TestAgent reviews whether tests are present, correct, and non-redundant. "
             "Syntax checking ensures the test code itself is valid. "
@@ -162,12 +168,13 @@ CAPABILITY_MAP: dict[AgentType, CapabilityScope] = {
             "It does NOT need check_secrets_pattern or dependency_advisory."
         ),
     ),
-
     AgentType.DOCS: CapabilityScope(
         agent_type=AgentType.DOCS,
-        allowed_tool_names=frozenset({
-            "search_similar_findings", # only tool: find how similar code is documented
-        }),
+        allowed_tool_names=frozenset(
+            {
+                "search_similar_findings",  # only tool: find how similar code is documented
+            }
+        ),
         rationale=(
             "DocsAgent reviews docstrings, comments, and README changes. "
             "Similarity search helps it find existing documentation conventions in "
@@ -176,13 +183,13 @@ CAPABILITY_MAP: dict[AgentType, CapabilityScope] = {
             "no syntax execution, no secret scanning, no dependency lookups."
         ),
     ),
-
 }
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def get_allowed_tools(agent_type: AgentType) -> frozenset[str]:
     """

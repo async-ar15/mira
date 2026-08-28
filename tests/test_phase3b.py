@@ -111,6 +111,7 @@ def override_get_settings_prod() -> Settings:
 # Runs once per test module — creates all tables in the shared in-memory DB.
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="module", autouse=True)
 async def create_tables():
     """Create SQLite tables once for this test module."""
@@ -125,6 +126,7 @@ async def create_tables():
 # ---------------------------------------------------------------------------
 # Per-test fixtures.
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def apply_dep_overrides():
@@ -158,10 +160,13 @@ async def client():
 # Mock Redis client (used in GET /reviews/{id} tests).
 # ---------------------------------------------------------------------------
 
+
 class _MockRedisClient:
     """Returns None for all cache reads (cache miss -> fall through to DB)."""
+
     async def get_cached_review_status(self, review_id: str):
         return None
+
     async def get_workflow_status(self, workflow_id: str):
         return None
 
@@ -169,6 +174,7 @@ class _MockRedisClient:
 # ---------------------------------------------------------------------------
 # Helper: insert a PRReviewRecord + optional FindingRecords into the test DB.
 # ---------------------------------------------------------------------------
+
 
 async def _insert_review(
     status: str = "completed",
@@ -237,6 +243,7 @@ async def _insert_review(
 # TESTS
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_1_list_reviews_empty(client):
     """GET /api/v1/reviews on empty DB returns empty list."""
@@ -303,6 +310,7 @@ async def test_5_get_review_detail(client):
     )
 
     import backend.api.reviews as reviews_module
+
     original = reviews_module.redis_client
     reviews_module.redis_client = _MockRedisClient()  # type: ignore
     try:
@@ -325,6 +333,7 @@ async def test_5_get_review_detail(client):
 async def test_6_get_review_not_found(client):
     """GET /api/v1/reviews/{id} with non-existent id returns 404."""
     import backend.api.reviews as reviews_module
+
     original = reviews_module.redis_client
     reviews_module.redis_client = _MockRedisClient()  # type: ignore
     try:
@@ -354,8 +363,10 @@ async def test_8_queue_with_pending_reviews(client):
     await _insert_review(repo=q_repo, pr_number=300, status="in_progress", verdict=None)
     # HITL review: completed but needs human approval
     await _insert_review(
-        repo=q_repo, pr_number=301,
-        status="completed", verdict="approve",
+        repo=q_repo,
+        pr_number=301,
+        status="completed",
+        verdict="approve",
         needs_human_review=True,
     )
 
@@ -383,12 +394,22 @@ async def test_9_auth_rejection_in_prod_mode(client):
     async with AsyncClient(transport=transport, base_url="http://test") as prod_client:
         # No key -> 401
         r1 = await prod_client.get("/api/v1/reviews")
-        assert r1.status_code == 401, f"Expected 401 without key, got {r1.status_code}: {r1.text}"
+        assert r1.status_code == 401, (
+            f"Expected 401 without key, got {r1.status_code}: {r1.text}"
+        )
 
         # Wrong key -> 403
-        r2 = await prod_client.get("/api/v1/reviews", headers={"X-API-Key": "wrong-key"})
-        assert r2.status_code == 403, f"Expected 403 with wrong key, got {r2.status_code}: {r2.text}"
+        r2 = await prod_client.get(
+            "/api/v1/reviews", headers={"X-API-Key": "wrong-key"}
+        )
+        assert r2.status_code == 403, (
+            f"Expected 403 with wrong key, got {r2.status_code}: {r2.text}"
+        )
 
         # Correct key -> 200
-        r3 = await prod_client.get("/api/v1/reviews", headers={"X-API-Key": "correct-key"})
-        assert r3.status_code == 200, f"Expected 200 with correct key, got {r3.status_code}: {r3.text}"
+        r3 = await prod_client.get(
+            "/api/v1/reviews", headers={"X-API-Key": "correct-key"}
+        )
+        assert r3.status_code == 200, (
+            f"Expected 200 with correct key, got {r3.status_code}: {r3.text}"
+        )

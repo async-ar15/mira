@@ -84,7 +84,7 @@ def validate_github_signature(
         )
 
     # Step 3: Extract just the hex digest part (everything after "sha256=")
-    received_signature = signature_header[len("sha256="):]
+    received_signature = signature_header[len("sha256=") :]
 
     # Step 4: Compute our own HMAC-SHA256
     # We use the secret as the key and the raw payload bytes as the message.

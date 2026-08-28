@@ -45,6 +45,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def make_settings(**overrides):
     from backend.config.settings import Settings
+
     defaults = dict(
         google_api_key="test-key",
         github_webhook_secret="test-secret",
@@ -112,20 +113,23 @@ def mock_post_review_response(review_id: int = 12345) -> httpx.Response:
     """Builds a mock GitHub POST /reviews response."""
     return httpx.Response(
         status_code=200,
-        content=json.dumps({
-            "id": review_id,
-            "node_id": "PRR_test",
-            "user": {"login": "ai-review-bot"},
-            "body": "AI Review",
-            "state": "APPROVED",
-            "html_url": f"https://github.com/jsmith/payments/pull/42#pullrequestreview-{review_id}",
-            "submitted_at": "2026-05-12T10:00:00Z",
-        }).encode(),
+        content=json.dumps(
+            {
+                "id": review_id,
+                "node_id": "PRR_test",
+                "user": {"login": "ai-review-bot"},
+                "body": "AI Review",
+                "state": "APPROVED",
+                "html_url": f"https://github.com/jsmith/payments/pull/42#pullrequestreview-{review_id}",
+                "submitted_at": "2026-05-12T10:00:00Z",
+            }
+        ).encode(),
         headers={"Content-Type": "application/json"},
     )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def run_all_tests():
     results = []
@@ -159,7 +163,10 @@ def run_all_tests():
         event = _verdict_to_review_event(ReviewVerdict.APPROVE)
         assert event == ReviewEvent.APPROVE, f"Expected APPROVE, got {event}"
 
-    assert_test("APPROVE verdict maps to ReviewEvent.APPROVE", test_approve_verdict_maps_to_approve_event)
+    assert_test(
+        "APPROVE verdict maps to ReviewEvent.APPROVE",
+        test_approve_verdict_maps_to_approve_event,
+    )
 
     # ─── Test 2: REQUEST_CHANGES verdict -> event=REQUEST_CHANGES ─────────────
     async def test_request_changes_verdict_maps():
@@ -168,10 +175,13 @@ def run_all_tests():
         from backend.orchestrator.nodes import _verdict_to_review_event
 
         event = _verdict_to_review_event(ReviewVerdict.REQUEST_CHANGES)
-        assert event == ReviewEvent.REQUEST_CHANGES, f"Expected REQUEST_CHANGES, got {event}"
+        assert event == ReviewEvent.REQUEST_CHANGES, (
+            f"Expected REQUEST_CHANGES, got {event}"
+        )
 
         # NEEDS_HUMAN_REVIEW -> COMMENT (does not block merge)
         from backend.models.enums import ReviewVerdict as RV
+
         event2 = _verdict_to_review_event(RV.NEEDS_HUMAN_REVIEW)
         assert event2 == ReviewEvent.COMMENT, f"Expected COMMENT for HITL, got {event2}"
 
@@ -179,7 +189,10 @@ def run_all_tests():
         event3 = _verdict_to_review_event(None)
         assert event3 == ReviewEvent.COMMENT, f"Expected COMMENT for None, got {event3}"
 
-    assert_test("REQUEST_CHANGES / HITL / None verdicts map correctly", test_request_changes_verdict_maps)
+    assert_test(
+        "REQUEST_CHANGES / HITL / None verdicts map correctly",
+        test_request_changes_verdict_maps,
+    )
 
     # ─── Test 3: Findings with file+line become inline ReviewComment ───────────
     async def test_inline_comments_built_correctly():
@@ -223,7 +236,10 @@ def run_all_tests():
         assert "Security Agent" in sql_comment.body
         assert "parameterized" in sql_comment.body  # suggestion included
 
-    assert_test("Inline findings become ReviewComment with correct fields", test_inline_comments_built_correctly)
+    assert_test(
+        "Inline findings become ReviewComment with correct fields",
+        test_inline_comments_built_correctly,
+    )
 
     # ─── Test 4: Findings without file_path NOT in inline comments ────────────
     async def test_pr_level_findings_excluded_from_inline():
@@ -259,7 +275,10 @@ def run_all_tests():
         )
         assert comments[0].path == "src/config.py"
 
-    assert_test("PR-level findings (no file_path) excluded from inline comments", test_pr_level_findings_excluded_from_inline)
+    assert_test(
+        "PR-level findings (no file_path) excluded from inline comments",
+        test_pr_level_findings_excluded_from_inline,
+    )
 
     # ─── Test 5: Successful GitHub post + Postgres save ───────────────────────
     async def test_successful_post_and_postgres_save():
@@ -277,7 +296,9 @@ def run_all_tests():
         # Mock GitHubClient.post_pr_review to return success
         mock_response = MagicMock()
         mock_response.id = 99001
-        mock_response.html_url = "https://github.com/jsmith/payments/pull/42#pullrequestreview-99001"
+        mock_response.html_url = (
+            "https://github.com/jsmith/payments/pull/42#pullrequestreview-99001"
+        )
 
         # Mock save_review to do nothing (avoid real DB)
         async def fake_save_review(*args, **kwargs):
@@ -285,19 +306,32 @@ def run_all_tests():
 
         # Mock get_db as async context manager
         class FakeSession:
-            async def __aenter__(self): return self
-            async def __aexit__(self, *a): pass
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *a):
+                pass
 
         class FakeGetDb:
-            def __call__(self): return self
-            async def __aenter__(self): return FakeSession()
-            async def __aexit__(self, *a): pass
+            def __call__(self):
+                return self
 
-        with patch("backend.orchestrator.nodes.GitHubClient") as MockClient, \
-             patch("backend.database.repository.save_review", side_effect=fake_save_review), \
-             patch("backend.database.postgres.get_db", FakeGetDb()), \
-             patch("backend.orchestrator.nodes.get_settings", return_value=make_settings()):
+            async def __aenter__(self):
+                return FakeSession()
 
+            async def __aexit__(self, *a):
+                pass
+
+        with (
+            patch("backend.orchestrator.nodes.GitHubClient") as MockClient,
+            patch(
+                "backend.database.repository.save_review", side_effect=fake_save_review
+            ),
+            patch("backend.database.postgres.get_db", FakeGetDb()),
+            patch(
+                "backend.orchestrator.nodes.get_settings", return_value=make_settings()
+            ),
+        ):
             mock_instance = AsyncMock()
             mock_instance.post_pr_review = AsyncMock(return_value=mock_response)
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
@@ -306,10 +340,17 @@ def run_all_tests():
 
             result = await post_review(state)
 
-        assert result["review_posted"] is True, f"Expected review_posted=True, got {result}"
-        assert result["github_review_id"] == 99001, f"Expected review_id=99001, got {result['github_review_id']}"
+        assert result["review_posted"] is True, (
+            f"Expected review_posted=True, got {result}"
+        )
+        assert result["github_review_id"] == 99001, (
+            f"Expected review_id=99001, got {result['github_review_id']}"
+        )
 
-    assert_test("Successful post -> review_posted=True, github_review_id set", test_successful_post_and_postgres_save)
+    assert_test(
+        "Successful post -> review_posted=True, github_review_id set",
+        test_successful_post_and_postgres_save,
+    )
 
     # ─── Test 6: GitHubAPIError routes to HITL (review_posted=False) ──────────
     async def test_github_api_error_routes_to_hitl():
@@ -324,9 +365,12 @@ def run_all_tests():
             needs_human_review=False,
         )
 
-        with patch("backend.orchestrator.nodes.GitHubClient") as MockClient, \
-             patch("backend.orchestrator.nodes.get_settings", return_value=make_settings()):
-
+        with (
+            patch("backend.orchestrator.nodes.GitHubClient") as MockClient,
+            patch(
+                "backend.orchestrator.nodes.get_settings", return_value=make_settings()
+            ),
+        ):
             mock_instance = AsyncMock()
             mock_instance.post_pr_review = AsyncMock(
                 side_effect=GitHubAPIError("Server error", status_code=503)
@@ -342,7 +386,10 @@ def run_all_tests():
         )
         assert result["github_review_id"] is None
 
-    assert_test("GitHubAPIError -> review_posted=False, no crash", test_github_api_error_routes_to_hitl)
+    assert_test(
+        "GitHubAPIError -> review_posted=False, no crash",
+        test_github_api_error_routes_to_hitl,
+    )
 
     # ─── Test 7: Postgres failure AFTER GitHub success -> review_posted=True ───
     async def test_postgres_failure_does_not_undo_github_post():
@@ -364,22 +411,32 @@ def run_all_tests():
 
         mock_response = MagicMock()
         mock_response.id = 99002
-        mock_response.html_url = "https://github.com/jsmith/payments/pull/42#pullrequestreview-99002"
+        mock_response.html_url = (
+            "https://github.com/jsmith/payments/pull/42#pullrequestreview-99002"
+        )
 
         # GitHub succeeds, Postgres fails
         async def failing_save(*args, **kwargs):
             raise Exception("Postgres connection refused")
 
         class FakeGetDb:
-            def __call__(self): return self
-            async def __aenter__(self): return MagicMock()
-            async def __aexit__(self, *a): pass
+            def __call__(self):
+                return self
 
-        with patch("backend.orchestrator.nodes.GitHubClient") as MockClient, \
-             patch("backend.database.repository.save_review", side_effect=failing_save), \
-             patch("backend.database.postgres.get_db", FakeGetDb()), \
-             patch("backend.orchestrator.nodes.get_settings", return_value=make_settings()):
+            async def __aenter__(self):
+                return MagicMock()
 
+            async def __aexit__(self, *a):
+                pass
+
+        with (
+            patch("backend.orchestrator.nodes.GitHubClient") as MockClient,
+            patch("backend.database.repository.save_review", side_effect=failing_save),
+            patch("backend.database.postgres.get_db", FakeGetDb()),
+            patch(
+                "backend.orchestrator.nodes.get_settings", return_value=make_settings()
+            ),
+        ):
             mock_instance = AsyncMock()
             mock_instance.post_pr_review = AsyncMock(return_value=mock_response)
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
@@ -395,7 +452,10 @@ def run_all_tests():
         )
         assert result["github_review_id"] == 99002
 
-    assert_test("Postgres failure after GitHub success -> review_posted=True (fault not failure)", test_postgres_failure_does_not_undo_github_post)
+    assert_test(
+        "Postgres failure after GitHub success -> review_posted=True (fault not failure)",
+        test_postgres_failure_does_not_undo_github_post,
+    )
 
     # ─── Test 8: needs_human_review=True -> GitHub never called ───────────────
     async def test_hitl_path_skips_github():
@@ -412,9 +472,12 @@ def run_all_tests():
 
         github_call_count = 0
 
-        with patch("backend.orchestrator.nodes.GitHubClient") as MockClient, \
-             patch("backend.orchestrator.nodes.get_settings", return_value=make_settings()):
-
+        with (
+            patch("backend.orchestrator.nodes.GitHubClient") as MockClient,
+            patch(
+                "backend.orchestrator.nodes.get_settings", return_value=make_settings()
+            ),
+        ):
             mock_instance = AsyncMock()
 
             async def track_post(*args, **kwargs):
@@ -436,7 +499,10 @@ def run_all_tests():
             f"Got {github_call_count} calls."
         )
 
-    assert_test("needs_human_review=True -> GitHub never called, review_posted=False", test_hitl_path_skips_github)
+    assert_test(
+        "needs_human_review=True -> GitHub never called, review_posted=False",
+        test_hitl_path_skips_github,
+    )
 
     # ─── Test 9: Review summary body has correct content ──────────────────────
     async def test_review_summary_body_content():
@@ -508,7 +574,10 @@ def run_all_tests():
         # Agent breakdown
         assert "Security" in body and "Quality" in body, "Should show agent breakdown"
 
-    assert_test("Review summary body has verdict, severity counts, confidence, workflow ID", test_review_summary_body_content)
+    assert_test(
+        "Review summary body has verdict, severity counts, confidence, workflow ID",
+        test_review_summary_body_content,
+    )
 
     # ─── Summary ──────────────────────────────────────────────────────────────
     print(f"\nResults: {passed}/{total} passed")

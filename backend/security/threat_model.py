@@ -54,8 +54,10 @@ from enum import Enum
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, Enum):  # type: ignore[no-redef]
         pass
+
 
 from backend.security.injection_guard import (
     InjectionSeverity,
@@ -67,8 +69,10 @@ from backend.security.masking import MaskingContext, MaskingPolicy
 # Threat vocabulary
 # ---------------------------------------------------------------------------
 
+
 class ThreatVector(StrEnum):
     """The category of threat detected."""
+
     PROMPT_INJECTION = "prompt_injection"
     PII_IN_DIFF = "pii_in_diff"
     SECRETS_IN_DIFF = "secrets_in_diff"
@@ -79,9 +83,10 @@ class ThreatVector(StrEnum):
 
 class ThreatSeverity(StrEnum):
     """How severe the threat is. Maps to RecommendedAction below."""
-    LOW = "low"        # ALLOW  — noteworthy but not dangerous
+
+    LOW = "low"  # ALLOW  — noteworthy but not dangerous
     MEDIUM = "medium"  # WARN   — log prominently, proceed
-    HIGH = "high"      # SANITISE — strip/redact, then proceed
+    HIGH = "high"  # SANITISE — strip/redact, then proceed
     CRITICAL = "critical"  # BLOCK — refuse processing
 
 
@@ -94,6 +99,7 @@ class RecommendedAction(StrEnum):
     SANITISE -- use sanitized/redacted content for agent processing
     BLOCK    -- reject the request with 400/422
     """
+
     ALLOW = "allow"
     WARN = "warn"
     SANITISE = "sanitise"
@@ -129,12 +135,14 @@ _INJECTION_TO_THREAT_SEVERITY: dict[InjectionSeverity, ThreatSeverity] = {
 # ThreatScore
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class ThreatScore:
     """
     One detected threat instance. Frozen so it can be safely stored in
     the PRReviewState and serialised to the audit trail.
     """
+
     vector: ThreatVector
     severity: ThreatSeverity
     description: str
@@ -144,6 +152,7 @@ class ThreatScore:
 # ---------------------------------------------------------------------------
 # ThreatAssessment
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ThreatAssessment:
@@ -158,13 +167,12 @@ class ThreatAssessment:
         redacted_diff        -- Diff with secrets and PII replaced by placeholders.
         placeholder_map      -- Placeholder -> original mapping for unmask.
     """
+
     scores: list[ThreatScore] = field(default_factory=list)
     overall_severity: ThreatSeverity | None = None
     recommended_action: RecommendedAction = RecommendedAction.ALLOW
-    assessed_at: datetime = field(
-        default_factory=lambda: datetime.now(UTC)
-    )
-    redacted_diff: str = ""         # Safe diff for agent consumption
+    assessed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    redacted_diff: str = ""  # Safe diff for agent consumption
     placeholder_map: dict[str, str] = field(default_factory=dict)
 
     @property
@@ -212,27 +220,45 @@ class ThreatAssessment:
 # regardless of the masking policy.
 
 _SECRET_DIFF_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("hardcoded_aws_key", re.compile(
-        r"\bAKIA[0-9A-Z]{16}\b",
-    )),
-    ("hardcoded_github_token", re.compile(
-        r"\bghp_[A-Za-z0-9]{36}\b",
-    )),
-    ("hardcoded_jwt", re.compile(
-        r"\beyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\b",
-    )),
-    ("generic_high_entropy_secret", re.compile(
-        r"(?:secret|password|passwd|token|key|credential)[=:\s\"'`]+([A-Za-z0-9+/]{32,})",
-        re.IGNORECASE,
-    )),
-    ("private_key_header", re.compile(
-        r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----",
-    )),
-    ("base64_encoded_secret", re.compile(
-        # Label followed by long base64 string — commonly env var secrets
-        r"(?:SECRET|TOKEN|KEY|PASS)[_A-Z]*\s*[=:]\s*([A-Za-z0-9+/]{40,}={0,2})",
-        re.IGNORECASE,
-    )),
+    (
+        "hardcoded_aws_key",
+        re.compile(
+            r"\bAKIA[0-9A-Z]{16}\b",
+        ),
+    ),
+    (
+        "hardcoded_github_token",
+        re.compile(
+            r"\bghp_[A-Za-z0-9]{36}\b",
+        ),
+    ),
+    (
+        "hardcoded_jwt",
+        re.compile(
+            r"\beyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\b",
+        ),
+    ),
+    (
+        "generic_high_entropy_secret",
+        re.compile(
+            r"(?:secret|password|passwd|token|key|credential)[=:\s\"'`]+([A-Za-z0-9+/]{32,})",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "private_key_header",
+        re.compile(
+            r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----",
+        ),
+    ),
+    (
+        "base64_encoded_secret",
+        re.compile(
+            # Label followed by long base64 string — commonly env var secrets
+            r"(?:SECRET|TOKEN|KEY|PASS)[_A-Z]*\s*[=:]\s*([A-Za-z0-9+/]{40,}={0,2})",
+            re.IGNORECASE,
+        ),
+    ),
 ]
 
 
@@ -240,13 +266,14 @@ _SECRET_DIFF_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 # Default configuration constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_MAX_DIFF_BYTES = 1_000_000   # 1 MB — flag diffs larger than this
-WARN_DIFF_BYTES = 500_000            # 500 KB — warn but allow
+DEFAULT_MAX_DIFF_BYTES = 1_000_000  # 1 MB — flag diffs larger than this
+WARN_DIFF_BYTES = 500_000  # 500 KB — warn but allow
 
 
 # ---------------------------------------------------------------------------
 # Core assessment function
 # ---------------------------------------------------------------------------
+
 
 def assess_pr_diff(
     title: str = "",
@@ -284,25 +311,29 @@ def assess_pr_diff(
     # ------------------------------------------------------------------
     diff_bytes = len(diff.encode("utf-8"))
     if diff_bytes > max_diff_bytes:
-        scores.append(ThreatScore(
-            vector=ThreatVector.OVERSIZED_PAYLOAD,
-            severity=ThreatSeverity.CRITICAL,
-            description=(
-                f"Diff size {diff_bytes:,} bytes exceeds hard limit "
-                f"{max_diff_bytes:,} bytes. Processing refused."
-            ),
-            evidence_snippet=f"diff_size={diff_bytes}",
-        ))
+        scores.append(
+            ThreatScore(
+                vector=ThreatVector.OVERSIZED_PAYLOAD,
+                severity=ThreatSeverity.CRITICAL,
+                description=(
+                    f"Diff size {diff_bytes:,} bytes exceeds hard limit "
+                    f"{max_diff_bytes:,} bytes. Processing refused."
+                ),
+                evidence_snippet=f"diff_size={diff_bytes}",
+            )
+        )
     elif diff_bytes > WARN_DIFF_BYTES:
-        scores.append(ThreatScore(
-            vector=ThreatVector.OVERSIZED_PAYLOAD,
-            severity=ThreatSeverity.MEDIUM,
-            description=(
-                f"Diff size {diff_bytes:,} bytes is large (warning threshold: "
-                f"{WARN_DIFF_BYTES:,} bytes). Token costs may be high."
-            ),
-            evidence_snippet=f"diff_size={diff_bytes}",
-        ))
+        scores.append(
+            ThreatScore(
+                vector=ThreatVector.OVERSIZED_PAYLOAD,
+                severity=ThreatSeverity.MEDIUM,
+                description=(
+                    f"Diff size {diff_bytes:,} bytes is large (warning threshold: "
+                    f"{WARN_DIFF_BYTES:,} bytes). Token costs may be high."
+                ),
+                evidence_snippet=f"diff_size={diff_bytes}",
+            )
+        )
 
     # ------------------------------------------------------------------
     # 2. Prompt injection check
@@ -311,15 +342,17 @@ def assess_pr_diff(
     injection_result = detector.check_pr(title=title, body=body, diff=diff)
     if injection_result.detected and injection_result.threat_level is not None:
         threat_sev = _INJECTION_TO_THREAT_SEVERITY[injection_result.threat_level]
-        scores.append(ThreatScore(
-            vector=ThreatVector.PROMPT_INJECTION,
-            severity=threat_sev,
-            description=(
-                f"Prompt injection detected. Matched patterns: "
-                f"{', '.join(injection_result.matched_patterns)}"
-            ),
-            evidence_snippet=_safe_snippet(injection_result.evidence_snippets),
-        ))
+        scores.append(
+            ThreatScore(
+                vector=ThreatVector.PROMPT_INJECTION,
+                severity=threat_sev,
+                description=(
+                    f"Prompt injection detected. Matched patterns: "
+                    f"{', '.join(injection_result.matched_patterns)}"
+                ),
+                evidence_snippet=_safe_snippet(injection_result.evidence_snippets),
+            )
+        )
 
     # ------------------------------------------------------------------
     # 3. Secrets in diff
@@ -328,15 +361,17 @@ def assess_pr_diff(
         for pattern_name, pattern in _SECRET_DIFF_PATTERNS:
             if pattern.search(diff):
                 # This is always HIGH or CRITICAL — committed secrets are severe
-                scores.append(ThreatScore(
-                    vector=ThreatVector.SECRETS_IN_DIFF,
-                    severity=ThreatSeverity.HIGH,
-                    description=(
-                        f"Potential secret detected in diff ({pattern_name}). "
-                        "The value will be redacted before agent processing."
-                    ),
-                    evidence_snippet=f"pattern={pattern_name}",
-                ))
+                scores.append(
+                    ThreatScore(
+                        vector=ThreatVector.SECRETS_IN_DIFF,
+                        severity=ThreatSeverity.HIGH,
+                        description=(
+                            f"Potential secret detected in diff ({pattern_name}). "
+                            "The value will be redacted before agent processing."
+                        ),
+                        evidence_snippet=f"pattern={pattern_name}",
+                    )
+                )
 
     # ------------------------------------------------------------------
     # 4. PII in diff via MaskingContext
@@ -357,25 +392,29 @@ def assess_pr_diff(
         secret_kinds = kinds_found & {"api_key", "token", "password", "private_key"}
 
         if pii_kinds:
-            scores.append(ThreatScore(
-                vector=ThreatVector.PII_IN_DIFF,
-                severity=ThreatSeverity.HIGH,
-                description=(
-                    f"PII detected and redacted from diff: {', '.join(sorted(pii_kinds))}. "
-                    "Agents will see placeholders, not raw values."
-                ),
-                evidence_snippet=f"pii_kinds={sorted(pii_kinds)}",
-            ))
+            scores.append(
+                ThreatScore(
+                    vector=ThreatVector.PII_IN_DIFF,
+                    severity=ThreatSeverity.HIGH,
+                    description=(
+                        f"PII detected and redacted from diff: {', '.join(sorted(pii_kinds))}. "
+                        "Agents will see placeholders, not raw values."
+                    ),
+                    evidence_snippet=f"pii_kinds={sorted(pii_kinds)}",
+                )
+            )
         if secret_kinds:
-            scores.append(ThreatScore(
-                vector=ThreatVector.API_KEY_EXPOSURE,
-                severity=ThreatSeverity.HIGH,
-                description=(
-                    f"Credential patterns detected and redacted: {', '.join(sorted(secret_kinds))}. "
-                    "Agents will see placeholders, not raw values."
-                ),
-                evidence_snippet=f"secret_kinds={sorted(secret_kinds)}",
-            ))
+            scores.append(
+                ThreatScore(
+                    vector=ThreatVector.API_KEY_EXPOSURE,
+                    severity=ThreatSeverity.HIGH,
+                    description=(
+                        f"Credential patterns detected and redacted: {', '.join(sorted(secret_kinds))}. "
+                        "Agents will see placeholders, not raw values."
+                    ),
+                    evidence_snippet=f"secret_kinds={sorted(secret_kinds)}",
+                )
+            )
 
     # ------------------------------------------------------------------
     # Compute overall severity and recommended action
@@ -425,6 +464,7 @@ def add_malformed_webhook_threat(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _max_severity(
     scores: Sequence[ThreatScore],

@@ -73,6 +73,7 @@ class EmbeddingError(Exception):
 # Core embedding functions
 # ---------------------------------------------------------------------------
 
+
 async def embed_text(text: str) -> list[float]:
     """
     Embeds a single text string into a 768-dimensional vector.
@@ -108,7 +109,8 @@ async def embed_text(text: str) -> list[float]:
         text = text[:MAX_EMBED_CHARS]
         logger.debug(
             "embed_text | truncated | original_chars=%d truncated_to=%d",
-            original_len, MAX_EMBED_CHARS,
+            original_len,
+            MAX_EMBED_CHARS,
         )
 
     cfg = get_settings()
@@ -123,11 +125,13 @@ async def embed_text(text: str) -> list[float]:
             task_type="retrieval_document",
             output_dimensionality=EMBEDDING_DIMENSIONS,
         )
-        vector = result['embedding']
+        vector = result["embedding"]
 
         logger.debug(
             "embed_text | success | model=%s dims=%d input_chars=%d",
-            cfg.google_embedding_model, len(vector), len(text),
+            cfg.google_embedding_model,
+            len(vector),
+            len(text),
         )
 
         return vector
@@ -168,7 +172,7 @@ async def embed_batch(texts: list[str]) -> list[list[float]]:
 
     for i, text in enumerate(texts):
         if not text or not text.strip():
-            truncated_texts.append("")   # placeholder
+            truncated_texts.append("")  # placeholder
             empty_indices.add(i)
         elif len(text) > MAX_EMBED_CHARS:
             truncated_texts.append(text[:MAX_EMBED_CHARS])
@@ -176,7 +180,9 @@ async def embed_batch(texts: list[str]) -> list[list[float]]:
             truncated_texts.append(text)
 
     # Separate non-empty texts for the API call
-    non_empty = [(i, t) for i, t in enumerate(truncated_texts) if i not in empty_indices]
+    non_empty = [
+        (i, t) for i, t in enumerate(truncated_texts) if i not in empty_indices
+    ]
 
     if not non_empty:
         # All texts were empty
@@ -194,11 +200,12 @@ async def embed_batch(texts: list[str]) -> list[list[float]]:
             output_dimensionality=EMBEDDING_DIMENSIONS,
         )
         # Result embedding is a list of lists of floats
-        embeddings = result['embedding']
+        embeddings = result["embedding"]
 
         logger.debug(
             "embed_batch | success | model=%s batch_size=%d",
-            cfg.google_embedding_model, len(batch_texts),
+            cfg.google_embedding_model,
+            len(batch_texts),
         )
 
         # Reconstruct the full results list (empty indices get zero vectors)

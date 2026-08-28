@@ -128,7 +128,9 @@ def build_review_graph():
     # This means resume() is not yet functional — we add that in the Redis section.
     compiled = workflow.compile()
 
-    logger.info("PR review graph compiled successfully. Nodes: %s", list(workflow.nodes))
+    logger.info(
+        "PR review graph compiled successfully. Nodes: %s", list(workflow.nodes)
+    )
 
     return compiled
 

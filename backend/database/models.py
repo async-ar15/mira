@@ -98,7 +98,7 @@ class PRReviewRecord(Base):
     repo_full_name: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
-        index=True,   # standalone index for queries filtering only by repo
+        index=True,  # standalone index for queries filtering only by repo
         comment="GitHub repository full name in 'owner/repo' format.",
     )
 
@@ -657,7 +657,7 @@ class HITLReview(Base):
     # Whether the human's decision has been posted back to GitHub.
     # After human approves/rejects, the dispute handler posts to GitHub and sets this True.
     posted_to_github: Mapped[bool] = mapped_column(
-        Integer,   # SQLite-compatible boolean as INTEGER
+        Integer,  # SQLite-compatible boolean as INTEGER
         nullable=False,
         default=0,
         comment="1 if the human verdict has been posted to GitHub.",
@@ -740,22 +740,26 @@ class HITLFeedback(Base):
 
     # Denormalized identifiers for dataset queries without JOINs.
     repo_full_name: Mapped[str] = mapped_column(
-        String(255), nullable=False,
+        String(255),
+        nullable=False,
         comment="Denormalized repo name.",
     )
     pr_number: Mapped[int] = mapped_column(
-        Integer, nullable=False,
+        Integer,
+        nullable=False,
         comment="PR number.",
     )
 
     # The key comparison: what did agents say vs what did human say?
     # This delta is the learning signal.
     agent_verdict: Mapped[str] = mapped_column(
-        String(32), nullable=False,
+        String(32),
+        nullable=False,
         comment="What the agents decided.",
     )
     human_verdict: Mapped[str] = mapped_column(
-        String(32), nullable=False,
+        String(32),
+        nullable=False,
         comment="What the human decided (the ground truth label).",
     )
 

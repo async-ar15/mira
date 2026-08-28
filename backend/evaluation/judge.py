@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 # Output types
 # ─────────────────────────────────────────────────────────────
 
+
 @dataclass
 class JudgeScore:
     """
@@ -66,11 +67,12 @@ class JudgeScore:
         judge_used_llm   -- True if LLM was called; False if score was computed
                             purely deterministically (e.g., verdict mismatch short-circuit)
     """
+
     example_id: str
     verdict_correct: bool
-    finding_coverage: float      # 0.0 - 1.0
-    severity_accuracy: float     # 0.0 - 1.0
-    overall_score: float         # 0.0 - 1.0
+    finding_coverage: float  # 0.0 - 1.0
+    severity_accuracy: float  # 0.0 - 1.0
+    overall_score: float  # 0.0 - 1.0
     reasoning: str
     judge_used_llm: bool = False
 
@@ -79,9 +81,9 @@ class JudgeScore:
 # Score weights (must sum to 1.0)
 # ─────────────────────────────────────────────────────────────
 
-_VERDICT_WEIGHT   = 0.4
-_COVERAGE_WEIGHT  = 0.4
-_SEVERITY_WEIGHT  = 0.2
+_VERDICT_WEIGHT = 0.4
+_COVERAGE_WEIGHT = 0.4
+_SEVERITY_WEIGHT = 0.2
 
 # Score threshold for considering a JudgeScore "passing" in calibration
 PASS_THRESHOLD = 0.70
@@ -136,7 +138,7 @@ class PRReviewJudge:
         string matching would get wrong on paraphrase.
         """
         # Step 1: Verdict correct? Deterministic -- no LLM needed.
-        verdict_correct = (actual_verdict == golden.expected_verdict)
+        verdict_correct = actual_verdict == golden.expected_verdict
 
         # Step 2: If no expected findings, coverage and severity are perfect
         # (there is nothing to miss).
@@ -165,7 +167,8 @@ class PRReviewJudge:
             logger.warning(
                 "PRReviewJudge LLM call failed for example %s: %s -- "
                 "falling back to keyword matching",
-                golden.id, exc,
+                golden.id,
+                exc,
             )
             coverage, severity_acc = self._judge_findings_deterministic(
                 golden=golden,
@@ -300,8 +303,9 @@ class PRReviewJudge:
                     # Check severity meets minimum
                     actual_sev = str(actual.get("severity", "low")).lower()
                     expected_sev = expected.min_severity.lower()
-                    if (severity_order.get(actual_sev, 0) >=
-                            severity_order.get(expected_sev, 0)):
+                    if severity_order.get(actual_sev, 0) >= severity_order.get(
+                        expected_sev, 0
+                    ):
                         severity_hits += 1
                     break  # found a match for this expected finding
 
@@ -335,7 +339,7 @@ class PRReviewJudge:
         expected_lines = []
         for i, ef in enumerate(golden.expected_findings):
             expected_lines.append(
-                f"  {i+1}. agent_type={ef.agent_type}, "
+                f"  {i + 1}. agent_type={ef.agent_type}, "
                 f"min_severity={ef.min_severity}, "
                 f"keyword_must_appear='{ef.keyword}'"
             )
@@ -344,7 +348,7 @@ class PRReviewJudge:
         actual_lines = []
         for i, af in enumerate(actual_findings):
             actual_lines.append(
-                f"  {i+1}. agent_type={af.get('agent_type', 'unknown')}, "
+                f"  {i + 1}. agent_type={af.get('agent_type', 'unknown')}, "
                 f"severity={af.get('severity', 'unknown')}, "
                 f"summary={af.get('summary', '')!r}"
             )

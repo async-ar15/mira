@@ -45,7 +45,7 @@ async def record_feedback(
     agent_verdict: str,
     human_verdict: str,
     reason: str,
-    context_snapshot: str,      # JSON string of findings at decision time
+    context_snapshot: str,  # JSON string of findings at decision time
 ) -> str:
     """
     Persist a HITLFeedback row as a training signal.
@@ -96,10 +96,12 @@ async def record_feedback(
             session.add(feedback)
 
         logger.info(
-            "hitl_feedback | recorded | id=%s hitl_id=%s type=%s "
-            "agent=%s human=%s",
-            feedback_id, hitl_review_id, feedback_type,
-            agent_verdict, human_verdict,
+            "hitl_feedback | recorded | id=%s hitl_id=%s type=%s agent=%s human=%s",
+            feedback_id,
+            hitl_review_id,
+            feedback_type,
+            agent_verdict,
+            human_verdict,
         )
         return feedback_id
 
@@ -113,7 +115,8 @@ async def record_feedback(
         logger.error(
             "hitl_feedback | record_failed | hitl_id=%s error=%s | "
             "dispute already committed, feedback lost for this review",
-            hitl_review_id, err,
+            hitl_review_id,
+            err,
         )
         # Return a stub ID so DisputeResult.feedback_id is always a string.
         return f"failed:{feedback_id}"

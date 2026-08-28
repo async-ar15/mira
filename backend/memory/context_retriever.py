@@ -128,7 +128,7 @@ async def retrieve_context_for_diff(
         logger.debug("retrieve_context | empty_repo -> returning ''")
         return ""
 
-    cfg = settings or get_settings()
+    settings or get_settings()
 
     # Step 1: Build the query text.
     # We use the first MAX_QUERY_CHARS of the diff as our semantic query.
@@ -143,14 +143,17 @@ async def retrieve_context_for_diff(
     except EmbeddingError as e:
         logger.warning(
             "retrieve_context | embed_failed | repo=%s error=%s -> returning ''",
-            repo_full_name, str(e),
+            repo_full_name,
+            str(e),
         )
         return ""
     except Exception as e:
         # Defensive catch for unexpected errors (e.g. network timeout not wrapped)
         logger.warning(
             "retrieve_context | embed_unexpected_error | repo=%s error=%s: %s -> returning ''",
-            repo_full_name, type(e).__name__, e,
+            repo_full_name,
+            type(e).__name__,
+            e,
         )
         return ""
 
@@ -178,7 +181,8 @@ async def retrieve_context_for_diff(
     if not relevant_results:
         logger.debug(
             "retrieve_context | no_relevant_results | repo=%s score_threshold=%.2f -> ''",
-            repo_full_name, MIN_SIMILARITY_SCORE,
+            repo_full_name,
+            MIN_SIMILARITY_SCORE,
         )
         return ""
 
@@ -187,7 +191,8 @@ async def retrieve_context_for_diff(
 
     logger.info(
         "retrieve_context | success | repo=%s chunks=%d",
-        repo_full_name, len(relevant_results),
+        repo_full_name,
+        len(relevant_results),
     )
 
     return context
@@ -196,6 +201,7 @@ async def retrieve_context_for_diff(
 # ---------------------------------------------------------------------------
 # PRIVATE HELPERS
 # ---------------------------------------------------------------------------
+
 
 def _format_context(results: list[CodeChunk]) -> str:
     """

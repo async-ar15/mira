@@ -151,21 +151,23 @@ async def save_review(
     # Step 2: Build FindingRecord objects for each finding
     finding_records: list[FindingRecord] = []
     for f in findings:
-        finding_records.append(FindingRecord(
-            id=str(uuid.uuid4()),
-            review_id=review_id,
-            repo_full_name=repo_full_name,      # denormalized (see models.py comment)
-            agent_type=f.get("agent_type", "unknown"),
-            severity=f.get("severity", "low"),
-            category=f.get("category", "quality"),
-            summary=f.get("summary", ""),
-            file_path=f.get("file_path"),        # None is fine (nullable column)
-            line_start=f.get("line_start"),
-            line_end=f.get("line_end"),
-            suggestion=f.get("suggestion"),
-            confidence=float(f.get("confidence", 0.5)),
-            created_at=now,
-        ))
+        finding_records.append(
+            FindingRecord(
+                id=str(uuid.uuid4()),
+                review_id=review_id,
+                repo_full_name=repo_full_name,  # denormalized (see models.py comment)
+                agent_type=f.get("agent_type", "unknown"),
+                severity=f.get("severity", "low"),
+                category=f.get("category", "quality"),
+                summary=f.get("summary", ""),
+                file_path=f.get("file_path"),  # None is fine (nullable column)
+                line_start=f.get("line_start"),
+                line_end=f.get("line_end"),
+                suggestion=f.get("suggestion"),
+                confidence=float(f.get("confidence", 0.5)),
+                created_at=now,
+            )
+        )
 
     # Step 3: Write everything in one atomic transaction
     # (From Storage-Engines.md wiki: "writes that span multiple tables must be atomic")
@@ -178,7 +180,11 @@ async def save_review(
 
     logger.info(
         "save_review | review_id=%s repo=%s pr=%d findings=%d status=%s",
-        review_id, repo_full_name, pr_number, len(findings), status,
+        review_id,
+        repo_full_name,
+        pr_number,
+        len(findings),
+        status,
     )
 
     return review
@@ -219,7 +225,8 @@ async def get_review(
     else:
         logger.debug(
             "get_review | found | review_id=%s findings=%d",
-            review_id, len(review.findings),
+            review_id,
+            len(review.findings),
         )
 
     return review
@@ -263,8 +270,7 @@ async def list_findings_for_repo(
     # Determine which severity values to include based on min_severity rank
     min_rank = _SEVERITY_RANK.get(min_severity.lower(), 1)  # default: high (rank 1)
     included_severities = [
-        sev for sev, rank in _SEVERITY_RANK.items()
-        if rank <= min_rank
+        sev for sev, rank in _SEVERITY_RANK.items() if rank <= min_rank
     ]
 
     if not included_severities:
@@ -289,7 +295,9 @@ async def list_findings_for_repo(
 
     logger.debug(
         "list_findings_for_repo | repo=%s min_severity=%s found=%d",
-        repo_full_name, min_severity, len(findings),
+        repo_full_name,
+        min_severity,
+        len(findings),
     )
 
     return findings
@@ -371,7 +379,10 @@ async def list_reviews(
 
     logger.debug(
         "list_reviews | repo=%s status=%s total=%d returned=%d",
-        repo_full_name, status, total, len(records),
+        repo_full_name,
+        status,
+        total,
+        len(records),
     )
 
     return records, total
@@ -459,7 +470,8 @@ async def list_queue_items(
 
     logger.debug(
         "list_queue_items | total=%d returned=%d",
-        total, len(records),
+        total,
+        len(records),
     )
 
     return records, total

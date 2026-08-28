@@ -97,7 +97,9 @@ async def get_stale_files(
 
     logger.debug(
         "get_stale_files | repo=%s known_embedded=%d current_files=%d",
-        repo_full_name, len(embedded), len(file_sha_map),
+        repo_full_name,
+        len(embedded),
+        len(file_sha_map),
     )
 
     # Compare: stale if not in DB, or SHA changed
@@ -114,7 +116,9 @@ async def get_stale_files(
 
     logger.info(
         "get_stale_files | repo=%s stale=%d fresh=%d",
-        repo_full_name, len(stale), len(file_sha_map) - len(stale),
+        repo_full_name,
+        len(stale),
+        len(file_sha_map) - len(stale),
     )
     return stale
 
@@ -192,5 +196,8 @@ async def mark_files_embedded(
 
     logger.debug(
         "mark_files_embedded | done | repo=%s path=%s sha=%s chunks=%d",
-        repo_full_name, file_path, file_sha[:8], chunk_count,
+        repo_full_name,
+        file_path,
+        file_sha[:8],
+        chunk_count,
     )

@@ -62,10 +62,25 @@ logger = logging.getLogger(__name__)
 # (RAG-Architecture.md: "match retrieval strategy to corpus shape")
 # Exclusions: markdown, JSON, YAML, lock files, compiled outputs.
 CODE_EXTENSIONS = {
-    ".py", ".ts", ".tsx", ".js", ".jsx",
-    ".go", ".java", ".rb", ".rs", ".cpp",
-    ".c", ".h", ".cs", ".swift", ".kt",
-    ".scala", ".php", ".sh", ".bash",
+    ".py",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".go",
+    ".java",
+    ".rb",
+    ".rs",
+    ".cpp",
+    ".c",
+    ".h",
+    ".cs",
+    ".swift",
+    ".kt",
+    ".scala",
+    ".php",
+    ".sh",
+    ".bash",
 }
 
 # GitHub REST API base URL.
@@ -114,41 +129,53 @@ async def fetch_repo_tree(
     # Step 1: get default branch SHA
     repo_url = f"{GITHUB_API_BASE}/repos/{repo_full_name}"
     try:
-        resp = await client.get(repo_url, headers=headers, timeout=GITHUB_REQUEST_TIMEOUT)
+        resp = await client.get(
+            repo_url, headers=headers, timeout=GITHUB_REQUEST_TIMEOUT
+        )
         resp.raise_for_status()
         repo_data = resp.json()
         default_branch = repo_data.get("default_branch", "main")
     except httpx.HTTPStatusError as e:
         logger.warning(
             "fetch_repo_tree | repo_not_found | repo=%s status=%d",
-            repo_full_name, e.response.status_code,
+            repo_full_name,
+            e.response.status_code,
         )
         return []
     except Exception as e:
         logger.warning(
             "fetch_repo_tree | github_error | repo=%s error=%s",
-            repo_full_name, e,
+            repo_full_name,
+            e,
         )
         return []
 
     # Step 2: get HEAD commit SHA for default branch
     branch_url = f"{GITHUB_API_BASE}/repos/{repo_full_name}/branches/{default_branch}"
     try:
-        resp = await client.get(branch_url, headers=headers, timeout=GITHUB_REQUEST_TIMEOUT)
+        resp = await client.get(
+            branch_url, headers=headers, timeout=GITHUB_REQUEST_TIMEOUT
+        )
         resp.raise_for_status()
         branch_data = resp.json()
         tree_sha = branch_data["commit"]["commit"]["tree"]["sha"]
     except Exception as e:
         logger.warning(
             "fetch_repo_tree | branch_error | repo=%s branch=%s error=%s",
-            repo_full_name, default_branch, e,
+            repo_full_name,
+            default_branch,
+            e,
         )
         return []
 
     # Step 3: fetch full tree recursively (one API call for entire repo)
-    tree_url = f"{GITHUB_API_BASE}/repos/{repo_full_name}/git/trees/{tree_sha}?recursive=1"
+    tree_url = (
+        f"{GITHUB_API_BASE}/repos/{repo_full_name}/git/trees/{tree_sha}?recursive=1"
+    )
     try:
-        resp = await client.get(tree_url, headers=headers, timeout=GITHUB_REQUEST_TIMEOUT)
+        resp = await client.get(
+            tree_url, headers=headers, timeout=GITHUB_REQUEST_TIMEOUT
+        )
         resp.raise_for_status()
         tree_data = resp.json()
 
@@ -158,25 +185,27 @@ async def fetch_repo_tree(
             logger.warning(
                 "fetch_repo_tree | tree_truncated | repo=%s "
                 "items_returned=%d (repo has >100k files)",
-                repo_full_name, len(tree_data.get("tree", [])),
+                repo_full_name,
+                len(tree_data.get("tree", [])),
             )
 
         # Return only blobs (files, not trees/directories)
         blobs = [
-            item for item in tree_data.get("tree", [])
-            if item.get("type") == "blob"
+            item for item in tree_data.get("tree", []) if item.get("type") == "blob"
         ]
 
         logger.info(
             "fetch_repo_tree | done | repo=%s total_blobs=%d",
-            repo_full_name, len(blobs),
+            repo_full_name,
+            len(blobs),
         )
         return blobs
 
     except Exception as e:
         logger.warning(
             "fetch_repo_tree | tree_error | repo=%s error=%s",
-            repo_full_name, e,
+            repo_full_name,
+            e,
         )
         return []
 
@@ -217,16 +246,16 @@ def filter_code_files(tree: list[dict[str, Any]]) -> list[dict[str, Any]]:
         # Check size
         if size > MAX_FILE_BYTES:
             skipped_size += 1
-            logger.debug(
-                "filter_code_files | skip_large | path=%s size=%d", path, size
-            )
+            logger.debug("filter_code_files | skip_large | path=%s size=%d", path, size)
             continue
 
         result.append(item)
 
     logger.info(
         "filter_code_files | done | kept=%d skipped_ext=%d skipped_size=%d",
-        len(result), skipped_ext, skipped_size,
+        len(result),
+        skipped_ext,
+        skipped_size,
     )
     return result
 
@@ -269,6 +298,7 @@ async def fetch_file_content(
 
         # GitHub returns base64-encoded content for file contents
         import base64
+
         content_b64 = data.get("content", "")
         if not content_b64:
             return None
@@ -280,21 +310,18 @@ async def fetch_file_content(
         try:
             return content_bytes.decode("utf-8")
         except UnicodeDecodeError:
-            logger.debug(
-                "fetch_file_content | binary_skip | path=%s", file_path
-            )
+            logger.debug("fetch_file_content | binary_skip | path=%s", file_path)
             return None
 
     except httpx.HTTPStatusError as e:
         logger.warning(
             "fetch_file_content | http_error | path=%s status=%d",
-            file_path, e.response.status_code,
+            file_path,
+            e.response.status_code,
         )
         return None
     except Exception as e:
-        logger.warning(
-            "fetch_file_content | error | path=%s error=%s", file_path, e
-        )
+        logger.warning("fetch_file_content | error | path=%s error=%s", file_path, e)
         return None
 
 
@@ -339,8 +366,13 @@ async def ingest_repository(repo_full_name: str) -> dict[str, int]:
             "ingest_repository | no_github_token | repo=%s skipping ingestion",
             repo_full_name,
         )
-        return {"total_files": 0, "stale_files": 0, "embedded": 0,
-                "skipped_fresh": 0, "errors": 0}
+        return {
+            "total_files": 0,
+            "stale_files": 0,
+            "embedded": 0,
+            "skipped_fresh": 0,
+            "errors": 0,
+        }
 
     summary = {
         "total_files": 0,
@@ -355,7 +387,6 @@ async def ingest_repository(repo_full_name: str) -> dict[str, int]:
     # Use a single httpx.AsyncClient for all GitHub requests.
     # (Reuse TCP connections across file fetches — reduces latency.)
     async with httpx.AsyncClient() as client:
-
         # Stage 1: fetch the full file tree
         tree = await fetch_repo_tree(repo_full_name, cfg.github_token, client)
         if not tree:
@@ -371,9 +402,7 @@ async def ingest_repository(repo_full_name: str) -> dict[str, int]:
         summary["total_files"] = len(code_files)
 
         if not code_files:
-            logger.info(
-                "ingest_repository | no_code_files | repo=%s", repo_full_name
-            )
+            logger.info("ingest_repository | no_code_files | repo=%s", repo_full_name)
             return summary
 
         # Stage 3: freshness check
@@ -392,10 +421,11 @@ async def ingest_repository(repo_full_name: str) -> dict[str, int]:
         summary["skipped_fresh"] = len(code_files) - len(stale_files)
 
         logger.info(
-            "ingest_repository | freshness_check | repo=%s "
-            "total=%d stale=%d fresh=%d",
-            repo_full_name, len(code_files),
-            len(stale_files), summary["skipped_fresh"],
+            "ingest_repository | freshness_check | repo=%s total=%d stale=%d fresh=%d",
+            repo_full_name,
+            len(code_files),
+            len(stale_files),
+            summary["skipped_fresh"],
         )
 
         if not stale_files:
@@ -409,7 +439,6 @@ async def ingest_repository(repo_full_name: str) -> dict[str, int]:
         # Per-file error isolation: one bad file doesn't abort the rest.
         # (Distributed-Systems-Fault-Model.md: "A fault is not a failure.")
         for file_path, file_sha in stale_files.items():
-
             # Stage 4a: fetch raw content
             content = await fetch_file_content(
                 repo_full_name, file_path, cfg.github_token, client
@@ -424,7 +453,9 @@ async def ingest_repository(repo_full_name: str) -> dict[str, int]:
             except EmbeddingError as e:
                 logger.warning(
                     "ingest_repository | embed_error | repo=%s path=%s error=%s",
-                    repo_full_name, file_path, e,
+                    repo_full_name,
+                    file_path,
+                    e,
                 )
                 summary["errors"] += 1
                 continue
@@ -437,9 +468,9 @@ async def ingest_repository(repo_full_name: str) -> dict[str, int]:
             chunk = CodeChunk(
                 repo=repo_full_name,
                 path=file_path,
-                content=content[:8000],   # consistent with embedder MAX_EMBED_CHARS
+                content=content[:8000],  # consistent with embedder MAX_EMBED_CHARS
                 embedding=vector,
-                chunk_index=0,            # single-chunk-per-file strategy (Phase 6)
+                chunk_index=0,  # single-chunk-per-file strategy (Phase 6)
                 token_count=len(content.split()),
             )
             tiger = get_tiger_memory()
@@ -458,7 +489,8 @@ async def ingest_repository(repo_full_name: str) -> dict[str, int]:
             summary["embedded"] += 1
             logger.debug(
                 "ingest_repository | embedded | repo=%s path=%s",
-                repo_full_name, file_path,
+                repo_full_name,
+                file_path,
             )
 
     logger.info(

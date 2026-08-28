@@ -36,9 +36,9 @@ from backend.data.ingestion import filter_code_files
 def test_filter_code_files_keeps_source_code():
     """Code files with recognized extensions are kept."""
     tree = [
-        {"path": "src/auth.py",         "sha": "aaa", "size": 1000, "type": "blob"},
-        {"path": "api/server.ts",        "sha": "bbb", "size": 2000, "type": "blob"},
-        {"path": "cmd/main.go",          "sha": "ccc", "size": 500,  "type": "blob"},
+        {"path": "src/auth.py", "sha": "aaa", "size": 1000, "type": "blob"},
+        {"path": "api/server.ts", "sha": "bbb", "size": 2000, "type": "blob"},
+        {"path": "cmd/main.go", "sha": "ccc", "size": 500, "type": "blob"},
     ]
     result = filter_code_files(tree)
     assert len(result) == 3
@@ -48,10 +48,15 @@ def test_filter_code_files_keeps_source_code():
 def test_filter_code_files_drops_non_code():
     """Docs, configs, lock files, and directories are excluded."""
     tree = [
-        {"path": "README.md",             "sha": "ddd", "size": 500,  "type": "blob"},
-        {"path": "package-lock.json",     "sha": "eee", "size": 90000,"type": "blob"},
-        {"path": ".github/workflows/ci.yml","sha": "fff","size": 1000, "type": "blob"},
-        {"path": "src",                   "sha": "ggg", "size": 0,    "type": "tree"},
+        {"path": "README.md", "sha": "ddd", "size": 500, "type": "blob"},
+        {"path": "package-lock.json", "sha": "eee", "size": 90000, "type": "blob"},
+        {
+            "path": ".github/workflows/ci.yml",
+            "sha": "fff",
+            "size": 1000,
+            "type": "blob",
+        },
+        {"path": "src", "sha": "ggg", "size": 0, "type": "tree"},
     ]
     result = filter_code_files(tree)
     assert len(result) == 0
@@ -60,9 +65,15 @@ def test_filter_code_files_drops_non_code():
 def test_filter_code_files_drops_large_files():
     """Files over MAX_FILE_BYTES (100 KB) are skipped even if .py."""
     from backend.data.ingestion import MAX_FILE_BYTES
+
     tree = [
-        {"path": "big_model.py", "sha": "hhh", "size": MAX_FILE_BYTES + 1, "type": "blob"},
-        {"path": "small.py",     "sha": "iii", "size": MAX_FILE_BYTES - 1, "type": "blob"},
+        {
+            "path": "big_model.py",
+            "sha": "hhh",
+            "size": MAX_FILE_BYTES + 1,
+            "type": "blob",
+        },
+        {"path": "small.py", "sha": "iii", "size": MAX_FILE_BYTES - 1, "type": "blob"},
     ]
     result = filter_code_files(tree)
     assert len(result) == 1
@@ -98,7 +109,9 @@ async def db_session():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+    factory = async_sessionmaker(
+        bind=engine, class_=AsyncSession, expire_on_commit=False
+    )
     async with factory() as session:
         yield session
 
@@ -112,7 +125,7 @@ async def test_get_stale_files_all_new(db_session):
     get_stale_files should return all entries in file_sha_map.
     """
     file_sha_map = {
-        "src/auth.py":   "sha_auth_v1",
+        "src/auth.py": "sha_auth_v1",
         "src/models.py": "sha_models_v1",
         "api/server.py": "sha_server_v1",
     }
@@ -135,14 +148,14 @@ async def test_get_stale_files_freshness_skip(db_session):
     repo = "octocat/test-repo"
 
     # Simulate first run: mark 2 files as embedded
-    await mark_files_embedded(db_session, repo, "src/auth.py",   "sha_auth_v1",   1)
+    await mark_files_embedded(db_session, repo, "src/auth.py", "sha_auth_v1", 1)
     await mark_files_embedded(db_session, repo, "src/models.py", "sha_models_v1", 1)
 
     # Second run: auth.py unchanged, models.py changed, server.py new
     file_sha_map = {
-        "src/auth.py":   "sha_auth_v1",      # same SHA -> fresh -> skip
-        "src/models.py": "sha_models_v2",    # different SHA -> stale
-        "api/server.py": "sha_server_v1",    # new file -> stale
+        "src/auth.py": "sha_auth_v1",  # same SHA -> fresh -> skip
+        "src/models.py": "sha_models_v2",  # different SHA -> stale
+        "api/server.py": "sha_server_v1",  # new file -> stale
     }
     stale = await get_stale_files(db_session, repo, file_sha_map)
 
@@ -198,15 +211,16 @@ async def test_ingest_repository_embeds_stale_files():
     fake_tree = {
         "truncated": False,
         "tree": [
-            {"path": "src/auth.py",   "sha": "sha_auth",   "size": 500,  "type": "blob"},
-            {"path": "src/models.py", "sha": "sha_models", "size": 800,  "type": "blob"},
-            {"path": "README.md",     "sha": "sha_readme", "size": 200,  "type": "blob"},
-        ]
+            {"path": "src/auth.py", "sha": "sha_auth", "size": 500, "type": "blob"},
+            {"path": "src/models.py", "sha": "sha_models", "size": 800, "type": "blob"},
+            {"path": "README.md", "sha": "sha_readme", "size": 200, "type": "blob"},
+        ],
     }
     fake_repo = {"default_branch": "main"}
     fake_branch = {"commit": {"commit": {"tree": {"sha": "tree_sha_abc"}}}}
     fake_file_content = {
-        "content": __import__("base64").b64encode(b"def example(): pass\n").decode() + "\n"
+        "content": __import__("base64").b64encode(b"def example(): pass\n").decode()
+        + "\n"
     }
 
     # Build a side_effect sequence for httpx GET calls:
@@ -216,7 +230,13 @@ async def test_ingest_repository_embeds_stale_files():
     # 4. /repos/{repo}/contents/src/auth.py   -> fake_file_content
     # 5. /repos/{repo}/contents/src/models.py -> fake_file_content
     get_responses = []
-    for resp_json in [fake_repo, fake_branch, fake_tree, fake_file_content, fake_file_content]:
+    for resp_json in [
+        fake_repo,
+        fake_branch,
+        fake_tree,
+        fake_file_content,
+        fake_file_content,
+    ]:
         mock_resp = MagicMock()
         mock_resp.json.return_value = resp_json
         mock_resp.raise_for_status = MagicMock()
@@ -241,18 +261,29 @@ async def test_ingest_repository_embeds_stale_files():
 
     fake_vector = [0.1] * 1536  # text-embedding-3-small dimension
 
-    with patch("httpx.AsyncClient", return_value=mock_http_client), \
-         patch("backend.data.ingestion.get_settings") as mock_cfg, \
-         patch("backend.data.ingestion.get_session_factory", return_value=mock_factory), \
-         patch("backend.data.ingestion.embed_text", new_callable=AsyncMock, return_value=fake_vector), \
-         patch("backend.data.ingestion.upsert_code_chunks", new_callable=AsyncMock) as mock_upsert, \
-         patch("backend.data.ingestion.get_stale_files", new_callable=AsyncMock,
-               return_value={"src/auth.py": "sha_auth", "src/models.py": "sha_models"}), \
-         patch("backend.data.ingestion.mark_files_embedded", new_callable=AsyncMock):
-
+    with (
+        patch("httpx.AsyncClient", return_value=mock_http_client),
+        patch("backend.data.ingestion.get_settings") as mock_cfg,
+        patch("backend.data.ingestion.get_session_factory", return_value=mock_factory),
+        patch(
+            "backend.data.ingestion.embed_text",
+            new_callable=AsyncMock,
+            return_value=fake_vector,
+        ),
+        patch(
+            "backend.data.ingestion.upsert_code_chunks", new_callable=AsyncMock
+        ) as mock_upsert,
+        patch(
+            "backend.data.ingestion.get_stale_files",
+            new_callable=AsyncMock,
+            return_value={"src/auth.py": "sha_auth", "src/models.py": "sha_models"},
+        ),
+        patch("backend.data.ingestion.mark_files_embedded", new_callable=AsyncMock),
+    ):
         mock_cfg.return_value.github_token = "fake-token"
 
         from backend.data.ingestion import ingest_repository
+
         summary = await ingest_repository("octocat/test-repo")
 
     # Both stale files should be embedded and upserted
@@ -268,9 +299,12 @@ async def test_ingest_repository_skips_fresh_files():
     ingest_repository() skips files with unchanged SHAs.
     When get_stale_files returns empty dict, embed is never called.
     """
-    fake_tree = {"truncated": False, "tree": [
-        {"path": "src/auth.py", "sha": "sha_auth", "size": 500, "type": "blob"},
-    ]}
+    fake_tree = {
+        "truncated": False,
+        "tree": [
+            {"path": "src/auth.py", "sha": "sha_auth", "size": 500, "type": "blob"},
+        ],
+    }
     fake_repo = {"default_branch": "main"}
     fake_branch = {"commit": {"commit": {"tree": {"sha": "tree_sha"}}}}
 
@@ -291,17 +325,24 @@ async def test_ingest_repository_skips_fresh_files():
     mock_session.__aexit__ = AsyncMock(return_value=False)
     mock_factory = MagicMock(return_value=mock_session)
 
-    with patch("httpx.AsyncClient", return_value=mock_http_client), \
-         patch("backend.data.ingestion.get_settings") as mock_cfg, \
-         patch("backend.data.ingestion.get_session_factory", return_value=mock_factory), \
-         patch("backend.data.ingestion.embed_text", new_callable=AsyncMock) as mock_embed, \
-         patch("backend.data.ingestion.upsert_code_chunks", new_callable=AsyncMock), \
-         patch("backend.data.ingestion.get_stale_files", new_callable=AsyncMock,
-               return_value={}):  # all fresh -> nothing stale
-
+    with (
+        patch("httpx.AsyncClient", return_value=mock_http_client),
+        patch("backend.data.ingestion.get_settings") as mock_cfg,
+        patch("backend.data.ingestion.get_session_factory", return_value=mock_factory),
+        patch(
+            "backend.data.ingestion.embed_text", new_callable=AsyncMock
+        ) as mock_embed,
+        patch("backend.data.ingestion.upsert_code_chunks", new_callable=AsyncMock),
+        patch(
+            "backend.data.ingestion.get_stale_files",
+            new_callable=AsyncMock,
+            return_value={},
+        ),
+    ):  # all fresh -> nothing stale
         mock_cfg.return_value.github_token = "fake-token"
 
         from backend.data.ingestion import ingest_repository
+
         summary = await ingest_repository("octocat/test-repo")
 
     # No files stale -> embed never called
@@ -324,10 +365,13 @@ async def test_ingest_repository_isolates_per_file_errors():
     # fetch_repo_tree returns 2 files, both stale
     fake_repo = {"default_branch": "main"}
     fake_branch = {"commit": {"commit": {"tree": {"sha": "tree_sha"}}}}
-    fake_tree = {"truncated": False, "tree": [
-        {"path": "src/a.py", "sha": "sha_a", "size": 300, "type": "blob"},
-        {"path": "src/b.py", "sha": "sha_b", "size": 300, "type": "blob"},
-    ]}
+    fake_tree = {
+        "truncated": False,
+        "tree": [
+            {"path": "src/a.py", "sha": "sha_a", "size": 300, "type": "blob"},
+            {"path": "src/b.py", "sha": "sha_b", "size": 300, "type": "blob"},
+        ],
+    }
     fake_content = {
         "content": __import__("base64").b64encode(b"x = 1\n").decode() + "\n"
     }
@@ -350,21 +394,32 @@ async def test_ingest_repository_isolates_per_file_errors():
 
     # embed_text: fails for a.py, succeeds for b.py
     from backend.memory.embedder import EmbeddingError
+
     embed_calls = [EmbeddingError("openai timeout"), fake_vector]
 
-    with patch("httpx.AsyncClient", return_value=mock_http_client), \
-         patch("backend.data.ingestion.get_settings") as mock_cfg, \
-         patch("backend.data.ingestion.get_session_factory", return_value=mock_factory), \
-         patch("backend.data.ingestion.embed_text", new_callable=AsyncMock,
-               side_effect=embed_calls), \
-         patch("backend.data.ingestion.upsert_code_chunks", new_callable=AsyncMock) as mock_upsert, \
-         patch("backend.data.ingestion.get_stale_files", new_callable=AsyncMock,
-               return_value={"src/a.py": "sha_a", "src/b.py": "sha_b"}), \
-         patch("backend.data.ingestion.mark_files_embedded", new_callable=AsyncMock):
-
+    with (
+        patch("httpx.AsyncClient", return_value=mock_http_client),
+        patch("backend.data.ingestion.get_settings") as mock_cfg,
+        patch("backend.data.ingestion.get_session_factory", return_value=mock_factory),
+        patch(
+            "backend.data.ingestion.embed_text",
+            new_callable=AsyncMock,
+            side_effect=embed_calls,
+        ),
+        patch(
+            "backend.data.ingestion.upsert_code_chunks", new_callable=AsyncMock
+        ) as mock_upsert,
+        patch(
+            "backend.data.ingestion.get_stale_files",
+            new_callable=AsyncMock,
+            return_value={"src/a.py": "sha_a", "src/b.py": "sha_b"},
+        ),
+        patch("backend.data.ingestion.mark_files_embedded", new_callable=AsyncMock),
+    ):
         mock_cfg.return_value.github_token = "fake-token"
 
         from backend.data.ingestion import ingest_repository
+
         summary = await ingest_repository("octocat/test-repo")
 
     # a.py errored, b.py succeeded — pipeline continued past the error
@@ -392,7 +447,11 @@ async def test_qdrant_search_uses_query_points():
 
     # Mock ScoredPoint return from .query_points()
     mock_point = MagicMock()
-    mock_point.payload = {"file_path": "src/auth.py", "chunk_text": "def login(): ...", "pr_number": 0}
+    mock_point.payload = {
+        "file_path": "src/auth.py",
+        "chunk_text": "def login(): ...",
+        "pr_number": 0,
+    }
     mock_point.score = 0.92
 
     mock_response = MagicMock()
@@ -404,9 +463,12 @@ async def test_qdrant_search_uses_query_points():
     # Ensure .search does NOT exist — if the code calls .search it raises AttributeError
     del mock_qdrant.search
 
-    with patch("backend.memory.qdrant_client.AsyncQdrantClient", return_value=mock_qdrant), \
-         patch("backend.memory.qdrant_client.get_settings") as mock_cfg:
-
+    with (
+        patch(
+            "backend.memory.qdrant_client.AsyncQdrantClient", return_value=mock_qdrant
+        ),
+        patch("backend.memory.qdrant_client.get_settings") as mock_cfg,
+    ):
         mock_cfg.return_value.qdrant_host = "localhost"
         mock_cfg.return_value.qdrant_port = 6335
 
@@ -438,6 +500,7 @@ async def test_ingest_repository_no_token():
         mock_cfg.return_value.github_token = ""  # empty token
 
         from backend.data.ingestion import ingest_repository
+
         summary = await ingest_repository("octocat/test-repo")
 
     assert summary["total_files"] == 0

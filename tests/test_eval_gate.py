@@ -78,15 +78,15 @@ def _build_input_data(payload: dict) -> dict:
     pr = payload["pull_request"]
     repo = payload["repository"]
     return {
-        "repo_full_name":  repo["full_name"],         # "octocat/acme-app"
-        "pr_number":       pr["number"],               # 42
-        "pr_title":        pr["title"],
-        "pr_description":  pr.get("body", ""),
-        "head_commit_sha": pr["head"]["sha"],          # 40-char hex SHA
-        "base_branch":     pr["base"]["ref"],
-        "head_branch":     pr["head"]["ref"],
-        "author":          pr["user"]["login"],
-        "diff_url":        pr.get("diff_url", ""),
+        "repo_full_name": repo["full_name"],  # "octocat/acme-app"
+        "pr_number": pr["number"],  # 42
+        "pr_title": pr["title"],
+        "pr_description": pr.get("body", ""),
+        "head_commit_sha": pr["head"]["sha"],  # 40-char hex SHA
+        "base_branch": pr["base"]["ref"],
+        "head_branch": pr["head"]["ref"],
+        "author": pr["user"]["login"],
+        "diff_url": pr.get("diff_url", ""),
     }
 
 
@@ -108,6 +108,7 @@ pytestmark = pytest.mark.skipif(
 # ---------------------------------------------------------------------------
 # The eval gate test
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_eval_gate_sample_pr_verdict():
@@ -185,9 +186,9 @@ diff --git a/utils/crypto.py b/utils/crypto.py
     mock_github.get_pull_request_diff.return_value = synthetic_diff
     mock_github.get_pull_request.return_value = {
         "title": input_data["pr_title"],
-        "body":  input_data.get("pr_description", ""),
-        "user":  {"login": input_data["author"]},
-        "head":  {"sha": input_data["head_commit_sha"]},
+        "body": input_data.get("pr_description", ""),
+        "user": {"login": input_data["author"]},
+        "head": {"sha": input_data["head_commit_sha"]},
     }
     # post_review raises 401 on fake repo — that's fine, review is saved before posting
     mock_github.post_review.side_effect = Exception("eval_gate: skipping GitHub post")
@@ -240,7 +241,9 @@ diff --git a/utils/crypto.py b/utils/crypto.py
 
     # 2. Verdict must be request_changes (hardcoded Stripe key + SQL injection
     #    in the fixture are serious enough to block the PR)
-    assert result.verdict is not None, "Verdict is None — pipeline did not produce a decision"
+    assert result.verdict is not None, (
+        "Verdict is None — pipeline did not produce a decision"
+    )
     assert result.verdict.value == "request_changes", (
         f"Expected 'request_changes', got '{result.verdict.value}'. "
         f"A prompt regression may have changed the agents' behavior. "
@@ -267,12 +270,13 @@ diff --git a/utils/crypto.py b/utils/crypto.py
     # 5. Security agent must have found the hardcoded Stripe key
     #    (this is the highest-confidence finding — it MUST be caught)
     security_findings = [
-        f for f in result.findings
-        if getattr(f, "category", "") in ("security",) or
-           "stripe" in str(getattr(f, "summary", "")).lower() or
-           "key" in str(getattr(f, "summary", "")).lower() or
-           "secret" in str(getattr(f, "summary", "")).lower() or
-           "hardcoded" in str(getattr(f, "summary", "")).lower()
+        f
+        for f in result.findings
+        if getattr(f, "category", "") in ("security",)
+        or "stripe" in str(getattr(f, "summary", "")).lower()
+        or "key" in str(getattr(f, "summary", "")).lower()
+        or "secret" in str(getattr(f, "summary", "")).lower()
+        or "hardcoded" in str(getattr(f, "summary", "")).lower()
     ]
     assert len(security_findings) >= 1, (
         "Security agent did not find the hardcoded Stripe API key in the fixture. "

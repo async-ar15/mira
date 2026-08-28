@@ -54,8 +54,8 @@ class FindingResponse(BaseModel):
     id: str
     review_id: str
     agent_type: str
-    severity: str          # "critical" | "high" | "medium" | "low"
-    category: str          # "security" | "quality" | "test_coverage" | "documentation"
+    severity: str  # "critical" | "high" | "medium" | "low"
+    category: str  # "security" | "quality" | "test_coverage" | "documentation"
     summary: str
     file_path: str | None = None
     line_start: int | None = None
@@ -88,7 +88,7 @@ class ReviewSummary(BaseModel):
     pr_number: int
     pr_title: str
     head_commit_sha: str
-    verdict: str | None = None     # None while in-progress
+    verdict: str | None = None  # None while in-progress
     status: str
     overall_confidence: float | None = None
     needs_human_review: bool
@@ -174,7 +174,9 @@ class ReviewListResponse(BaseModel):
     """Paginated list of review summaries."""
 
     items: list[ReviewSummary]
-    total: int = Field(description="Total reviews matching the filter (not just this page).")
+    total: int = Field(
+        description="Total reviews matching the filter (not just this page)."
+    )
     limit: int
     offset: int
 
@@ -206,6 +208,7 @@ class QueueResponse(BaseModel):
 # These functions take ORM objects and return pure Pydantic models.
 # They have zero I/O — no DB calls, no Redis calls. Fully unit-testable.
 # ---------------------------------------------------------------------------
+
 
 def finding_record_to_response(record: FindingRecord) -> FindingResponse:
     """

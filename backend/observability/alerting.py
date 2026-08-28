@@ -50,14 +50,20 @@ class AlertLevel(StrEnum):
 
     Ordered: PAGE > URGENT > WARNING > INFO (higher index = more severe).
     """
-    INFO    = "INFO"
+
+    INFO = "INFO"
     WARNING = "WARNING"
-    URGENT  = "URGENT"
-    PAGE    = "PAGE"
+    URGENT = "URGENT"
+    PAGE = "PAGE"
 
     def is_at_least(self, other: AlertLevel) -> bool:
         """True if this level is >= other in severity."""
-        _order = [AlertLevel.INFO, AlertLevel.WARNING, AlertLevel.URGENT, AlertLevel.PAGE]
+        _order = [
+            AlertLevel.INFO,
+            AlertLevel.WARNING,
+            AlertLevel.URGENT,
+            AlertLevel.PAGE,
+        ]
         return _order.index(self) >= _order.index(other)
 
 
@@ -76,6 +82,7 @@ class AlertRule:
             condition=lambda m: m.error_rate > 0.50,
         )
     """
+
     name: str
     level: AlertLevel
     description: str
@@ -93,6 +100,7 @@ class AlertRule:
 @dataclass
 class FiredAlert:
     """One rule that fired against a MetricSnapshot."""
+
     rule_name: str
     level: AlertLevel
     description: str
@@ -122,6 +130,7 @@ class MetricSnapshot:
       hitl_rate            -> review_hitl_rate
       avg_cost_per_review  -> review_avg_cost_usd
     """
+
     # Fraction of reviews that failed (unhandled exception or timeout)
     error_rate: float = 0.0
 
@@ -147,6 +156,7 @@ class MetricSnapshot:
 
 
 # ── Default rules (wiki + business context) ───────────────────────────────────
+
 
 def _build_default_rules() -> list[AlertRule]:
     """Build the default alerting rule set.
@@ -255,7 +265,12 @@ class AlertManager:
         fired = self.check_conditions(metrics)
         if not fired:
             return None
-        _order = [AlertLevel.INFO, AlertLevel.WARNING, AlertLevel.URGENT, AlertLevel.PAGE]
+        _order = [
+            AlertLevel.INFO,
+            AlertLevel.WARNING,
+            AlertLevel.URGENT,
+            AlertLevel.PAGE,
+        ]
         return max(fired, key=lambda a: _order.index(a.level)).level
 
     def add_rule(self, rule: AlertRule) -> None:

@@ -81,7 +81,10 @@ async def record_llm_call(
     except Exception as exc:  # pragma: no cover — defensive
         logger.warning(
             "llm_call_log_persist_failed | agent=%s model=%s cost=%.6f error=%s",
-            agent_type, model, cost_usd, exc,
+            agent_type,
+            model,
+            cost_usd,
+            exc,
         )
 
 
@@ -124,13 +127,14 @@ async def get_daily_spend(
 @dataclass
 class WorkflowCost:
     """Cost rollup for a single workflow (one PR review run)."""
+
     workflow_id: str
     total_cost_usd: float
     total_input_tokens: int
     total_output_tokens: int
     call_count: int
-    by_agent: dict[str, float]   # agent_type -> cost_usd
-    by_model: dict[str, float]   # model -> cost_usd
+    by_agent: dict[str, float]  # agent_type -> cost_usd
+    by_model: dict[str, float]  # model -> cost_usd
 
 
 async def get_workflow_cost(workflow_id: str) -> WorkflowCost:
@@ -169,6 +173,7 @@ async def get_workflow_cost(workflow_id: str) -> WorkflowCost:
 @dataclass
 class EconomicsSummary:
     """Aggregate spend snapshot for the economics summary endpoint."""
+
     today_usd: float
     last_7d_usd: float
     last_30d_usd: float
@@ -185,10 +190,10 @@ async def get_summary() -> EconomicsSummary:
 
     The dashboard's primary cost card consumes this single endpoint.
     """
-    now = datetime.now(UTC)
+    datetime.now(UTC)
     today_start = _utc_today_start()
-    d7_start = today_start - timedelta(days=6)   # inclusive of today = 7 days
-    d30_start = today_start - timedelta(days=29) # inclusive of today = 30 days
+    d7_start = today_start - timedelta(days=6)  # inclusive of today = 7 days
+    d30_start = today_start - timedelta(days=29)  # inclusive of today = 30 days
 
     try:
         async with _new_session() as session:
@@ -232,7 +237,7 @@ async def get_summary() -> EconomicsSummary:
 
 @dataclass
 class DailyPoint:
-    date: str            # ISO YYYY-MM-DD (UTC)
+    date: str  # ISO YYYY-MM-DD (UTC)
     cost_usd: float
     call_count: int
 
@@ -265,13 +270,16 @@ async def get_daily_timeseries(days: int = 30) -> list[DailyPoint]:
         d = window_start + timedelta(days=i)
         key = d.strftime("%Y-%m-%d")
         cost, count = buckets.get(key, [0.0, 0])
-        points.append(DailyPoint(date=key, cost_usd=round(cost, 6), call_count=int(count)))
+        points.append(
+            DailyPoint(date=key, cost_usd=round(cost, 6), call_count=int(count))
+        )
     return points
 
 
 # ---------------------------------------------------------------------------
 # Tiger Cloud continuous-aggregate read methods
 # ---------------------------------------------------------------------------
+
 
 async def get_agent_health(
     pool: asyncpg.Pool,

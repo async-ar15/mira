@@ -45,6 +45,7 @@ from backend.models.enums import (
 # No more dict[str, Any] — the contract is explicit.
 # -----------------------------------------------------------------------------
 
+
 class AgentFindingSummary(BaseModel):
     """
     A single finding from one specialist agent, included in the workflow result.
@@ -55,6 +56,7 @@ class AgentFindingSummary(BaseModel):
     severity and category are enough for the orchestrator to make routing decisions
     (e.g. CRITICAL -> ping human immediately).
     """
+
     agent_type: str
     # Which severity bucket this falls in (CRITICAL, HIGH, MEDIUM, LOW)
     severity: FindingSeverity
@@ -123,6 +125,7 @@ class WorkflowResult(BaseModel):
 # -----------------------------------------------------------------------------
 # WorkflowEngine - the abstract interface
 # -----------------------------------------------------------------------------
+
 
 class WorkflowEngine(ABC):
     """

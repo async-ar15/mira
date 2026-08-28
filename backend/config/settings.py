@@ -97,7 +97,9 @@ class Settings(BaseSettings):
     # Postgres connection URL.
     # Format: postgresql+asyncpg://user:password@host:port/dbname
     # Used for: persistent review history, findings, audit log
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/pr_review_agent"
+    database_url: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/pr_review_agent"
+    )
 
     # -------------------------------------------------------------------------
     # Tiger Cloud (TimescaleDB) — Semantic Memory + Events Spine
@@ -128,7 +130,9 @@ class Settings(BaseSettings):
 
     # Tiger Cloud asyncpg pool settings (separate from the main app pool)
     tiger_pool_min: int = Field(default=2, description="Min connections in Tiger pool.")
-    tiger_pool_max: int = Field(default=10, description="Max connections in Tiger pool.")
+    tiger_pool_max: int = Field(
+        default=10, description="Max connections in Tiger pool."
+    )
 
     # Google Gemini embedding model.
     google_embedding_model: str = "gemini-embedding-2"
@@ -186,7 +190,9 @@ class Settings(BaseSettings):
     # DEFAULT: empty string.
     # An empty api_key in production causes require_auth() to return HTTP 500
     # (misconfiguration), not silently pass. Operators are forced to set this.
-    api_key: str = Field(default="", description="API key for the REST API. Required in production.")
+    api_key: str = Field(
+        default="", description="API key for the REST API. Required in production."
+    )
 
     # -------------------------------------------------------------------------
     # Phase 16 — Economics & Cost Control

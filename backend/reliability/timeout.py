@@ -58,6 +58,7 @@ T = TypeVar("T")
 # Configuration
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class TimeoutConfig:
     """
@@ -73,6 +74,7 @@ class TimeoutConfig:
                               If this fires, ALL agents are cancelled and the
                               review is marked as TIMEOUT in PRReviewState.
     """
+
     agent_timeout_s: float = 30.0
     llm_timeout_s: float = 25.0
     tool_timeout_s: float = 10.0
@@ -86,6 +88,7 @@ DEFAULT_TIMEOUTS = TimeoutConfig()
 # Exceptions
 # ---------------------------------------------------------------------------
 
+
 class AgentTimeoutError(Exception):
     """
     Raised when an individual agent exceeds its per-agent timeout.
@@ -98,6 +101,7 @@ class AgentTimeoutError(Exception):
       - partial_review = True in PRReviewState
       - records the timed-out agent in the verdict_breakdown as TIMEOUT
     """
+
     def __init__(self, agent_name: str, timeout_seconds: float) -> None:
         self.agent_name = agent_name
         self.timeout_seconds = timeout_seconds
@@ -109,6 +113,7 @@ class AgentTimeoutError(Exception):
 # ---------------------------------------------------------------------------
 # Single-coroutine timeout wrapper
 # ---------------------------------------------------------------------------
+
 
 async def with_timeout(
     coro: Awaitable[T],
@@ -134,15 +139,14 @@ async def with_timeout(
     try:
         return await asyncio.wait_for(coro, timeout=seconds)
     except TimeoutError:
-        logger.warning(
-            "with_timeout: '%s' timed out after %.1fs.", name, seconds
-        )
+        logger.warning("with_timeout: '%s' timed out after %.1fs.", name, seconds)
         raise AgentTimeoutError(agent_name=name, timeout_seconds=seconds)
 
 
 # ---------------------------------------------------------------------------
 # Parallel fan-out with per-agent timeouts
 # ---------------------------------------------------------------------------
+
 
 async def run_agents_with_per_agent_timeout(
     agent_fns: list[tuple[str, Callable[[], Awaitable[Any]]]],
@@ -195,6 +199,7 @@ async def run_agents_with_per_agent_timeout(
                 # Normal AgentOutput
                 ...
     """
+
     async def _guarded(name: str, factory: Callable[[], Awaitable[Any]]) -> Any:
         """Wrap one agent call with its individual timeout."""
         try:
@@ -221,6 +226,7 @@ async def run_agents_with_per_agent_timeout(
 # ---------------------------------------------------------------------------
 # Workflow-level hard timeout
 # ---------------------------------------------------------------------------
+
 
 async def run_with_workflow_timeout(
     coro: Awaitable[T],

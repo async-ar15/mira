@@ -52,6 +52,7 @@ logger = logging.getLogger(__name__)
 # Result envelope stored by the idempotency layer
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class IdempotencyRecord:
     """
@@ -65,8 +66,9 @@ class IdempotencyRecord:
         created_at -- Unix timestamp of first creation.
         updated_at -- Unix timestamp of last update.
     """
+
     key: str
-    status: str = "in_flight"       # in_flight | complete | failed
+    status: str = "in_flight"  # in_flight | complete | failed
     result: Any = None
     error: str | None = None
     created_at: float = field(default_factory=time.time)
@@ -79,6 +81,7 @@ class IdempotencyRecord:
 # ---------------------------------------------------------------------------
 # Abstract interface
 # ---------------------------------------------------------------------------
+
 
 class IdempotencyStore(ABC):
     """
@@ -122,6 +125,7 @@ class IdempotencyStore(ABC):
 # In-memory implementation (tests / dev)
 # ---------------------------------------------------------------------------
 
+
 class InMemoryIdempotencyStore(IdempotencyStore):
     """
     Dict-backed idempotency store. Thread-safe via a simple dict
@@ -161,9 +165,7 @@ class InMemoryIdempotencyStore(IdempotencyStore):
             rec.error = error
             rec.updated_at = time.time()
         else:
-            self._store[key] = IdempotencyRecord(
-                key=key, status="failed", error=error
-            )
+            self._store[key] = IdempotencyRecord(key=key, status="failed", error=error)
 
     def delete(self, key: str) -> None:
         self._store.pop(key, None)
@@ -175,6 +177,7 @@ class InMemoryIdempotencyStore(IdempotencyStore):
 # ---------------------------------------------------------------------------
 # Redis implementation (production)
 # ---------------------------------------------------------------------------
+
 
 class RedisIdempotencyStore(IdempotencyStore):
     """
@@ -199,13 +202,14 @@ class RedisIdempotencyStore(IdempotencyStore):
     ) -> None:
         self._redis_url = redis_url
         self._ttl_s = ttl_s
-        self._client: Any = None   # Lazily initialised in _get_client()
+        self._client: Any = None  # Lazily initialised in _get_client()
 
     def _get_client(self) -> Any:
         """Lazy Redis client initialisation."""
         if self._client is None:
             try:
                 import redis as _redis
+
                 self._client = _redis.Redis.from_url(
                     self._redis_url, decode_responses=True
                 )
@@ -221,6 +225,7 @@ class RedisIdempotencyStore(IdempotencyStore):
 
     def get(self, key: str) -> IdempotencyRecord | None:
         import json
+
         client = self._get_client()
         raw = client.get(self._key(key))
         if raw is None:
@@ -234,22 +239,26 @@ class RedisIdempotencyStore(IdempotencyStore):
         Redis SET NX is atomic — safe under concurrent duplicate deliveries.
         """
         import json
+
         client = self._get_client()
         record = IdempotencyRecord(key=key, status="in_flight")
-        payload = json.dumps({
-            "key": record.key,
-            "status": record.status,
-            "result": record.result,
-            "error": record.error,
-            "created_at": record.created_at,
-            "updated_at": record.updated_at,
-        })
+        payload = json.dumps(
+            {
+                "key": record.key,
+                "status": record.status,
+                "result": record.result,
+                "error": record.error,
+                "created_at": record.created_at,
+                "updated_at": record.updated_at,
+            }
+        )
         # SET NX EX: only set if key does not exist, with expiry
         result = client.set(self._key(key), payload, nx=True, ex=self._ttl_s)
-        return result is not None   # True = newly set, None = already existed
+        return result is not None  # True = newly set, None = already existed
 
     def mark_complete(self, key: str, result: Any = None) -> None:
         import json
+
         client = self._get_client()
         rkey = self._key(key)
         raw = client.get(rkey)
@@ -264,6 +273,7 @@ class RedisIdempotencyStore(IdempotencyStore):
 
     def mark_failed(self, key: str, error: str) -> None:
         import json
+
         client = self._get_client()
         rkey = self._key(key)
         raw = client.get(rkey)
@@ -284,6 +294,7 @@ class RedisIdempotencyStore(IdempotencyStore):
 # ---------------------------------------------------------------------------
 # Functional guard
 # ---------------------------------------------------------------------------
+
 
 def idempotency_guard(
     store: IdempotencyStore,
@@ -316,7 +327,8 @@ def idempotency_guard(
     if existing and existing.status == "in_flight":
         logger.warning(
             "idempotency_guard: key '%s' is in_flight (concurrent duplicate?). "
-            "Proceeding anyway — results will overwrite.", key
+            "Proceeding anyway — results will overwrite.",
+            key,
         )
 
     acquired = store.set_in_flight(key)
@@ -340,6 +352,7 @@ def idempotency_guard(
 # Higher-level ARQ job deduplicator
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class JobDeduplicator:
     """
@@ -355,6 +368,7 @@ class JobDeduplicator:
             ...
             dedup.complete(key, result)
     """
+
     store: IdempotencyStore
 
     def make_key(self, pr_id: str | int, sha: str) -> str:

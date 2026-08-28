@@ -37,6 +37,7 @@ except ImportError:
     class StrEnum(str, Enum):  # type: ignore[no-redef]
         pass
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -128,9 +129,10 @@ class AgentEvent:
     Maps directly to the schema in scripts/migrations/2026-06-tiger-init.sql.
     All time is UTC. span_id is auto-generated if not supplied.
     """
+
     review_id: str
-    agent: str                       # "security" | "quality" | "tests" | "docs" | "aggregator" | "system"
-    event_type: str                  # "span.start" | "span.end" | "llm.call" | "tool.call" | "decision" | "escalation"
+    agent: str  # "security" | "quality" | "tests" | "docs" | "aggregator" | "system"
+    event_type: str  # "span.start" | "span.end" | "llm.call" | "tool.call" | "decision" | "escalation"
     ts: datetime = field(default_factory=lambda: datetime.now(UTC))
     span_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     parent_span: str | None = None
@@ -139,7 +141,9 @@ class AgentEvent:
     tokens_out: int | None = None
     cost_usd: float | None = None
     latency_ms: int | None = None
-    outcome: str | None = None       # "approved" | "request_changes" | "critical_block" | "escalated"
+    outcome: str | None = (
+        None  # "approved" | "request_changes" | "critical_block" | "escalated"
+    )
     confidence: float | None = None  # 0.000 to 1.000
     payload: dict[str, Any] | None = None
 
@@ -188,10 +192,16 @@ async def emit_agent_event(pool: asyncpg.Pool | None, event: AgentEvent) -> None
             await conn.execute(
                 _INSERT_SQL,
                 event.ts,
-                uuid.UUID(event.review_id) if isinstance(event.review_id, str) else event.review_id,
+                uuid.UUID(event.review_id)
+                if isinstance(event.review_id, str)
+                else event.review_id,
                 event.agent,
-                uuid.UUID(event.span_id) if isinstance(event.span_id, str) else event.span_id,
-                uuid.UUID(event.parent_span) if isinstance(event.parent_span, str) else event.parent_span,
+                uuid.UUID(event.span_id)
+                if isinstance(event.span_id, str)
+                else event.span_id,
+                uuid.UUID(event.parent_span)
+                if isinstance(event.parent_span, str)
+                else event.parent_span,
                 event.event_type,
                 event.model,
                 event.tokens_in,
@@ -200,11 +210,14 @@ async def emit_agent_event(pool: asyncpg.Pool | None, event: AgentEvent) -> None
                 event.latency_ms,
                 event.outcome,
                 event.confidence,
-                event.payload,   # asyncpg serializes dict -> JSONB automatically
+                event.payload,  # asyncpg serializes dict -> JSONB automatically
             )
     except Exception as exc:  # noqa: BLE001
         # Never let observability failures crash the review workflow.
         logger.error(
             "emit_agent_event failed (non-fatal) | review_id=%s agent=%s event=%s error=%s",
-            event.review_id, event.agent, event.event_type, exc,
+            event.review_id,
+            event.agent,
+            event.event_type,
+            exc,
         )

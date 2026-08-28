@@ -79,12 +79,11 @@ class PromptVersion:
                       Useful for debugging "which prompt was active when this
                       review ran" (Phase 10 Observability will log this).
     """
+
     agent_type: AgentType
     version_str: str
     content: str
-    loaded_at: datetime = field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    loaded_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class PromptRegistry:
@@ -148,7 +147,11 @@ class PromptRegistry:
 
         # Cache hit — return immediately without disk I/O.
         if cache_key in self._cache:
-            logger.debug("prompt_cache_hit | agent=%s version=%s", agent_type.value, resolved_version)
+            logger.debug(
+                "prompt_cache_hit | agent=%s version=%s",
+                agent_type.value,
+                resolved_version,
+            )
             return self._cache[cache_key].content
 
         # Cache miss — load from disk.
@@ -169,7 +172,9 @@ class PromptRegistry:
 
         logger.info(
             "prompt_loaded | agent=%s version=%s chars=%d",
-            agent_type.value, resolved_version, len(content),
+            agent_type.value,
+            resolved_version,
+            len(content),
         )
         return content
 

@@ -20,10 +20,12 @@ def fix_webhook_redis_usage():
     """
     Reduce idempotency TTL to cut down on repeated Redis requests.
     """
-    webhook_path = Path(__file__).parent.parent / "backend" / "webhook_receiver" / "router.py"
+    webhook_path = (
+        Path(__file__).parent.parent / "backend" / "webhook_receiver" / "router.py"
+    )
 
     print(f"Reading {webhook_path}...")
-    with open(webhook_path, 'r') as f:
+    with open(webhook_path, "r") as f:
         content = f.read()
 
     # Check if we need to add/reduce IDEMPOTENCY_TTL constant
@@ -32,7 +34,7 @@ def fix_webhook_redis_usage():
         # Add it after imports
         content = content.replace(
             "from backend.database.postgres import get_db",
-            "from backend.database.postgres import get_db\n\n# Reduce TTL to avoid repeated Redis operations\nIDEMPOTENCY_TTL = 3600  # 1 hour (vs default 24h)"
+            "from backend.database.postgres import get_db\n\n# Reduce TTL to avoid repeated Redis operations\nIDEMPOTENCY_TTL = 3600  # 1 hour (vs default 24h)",
         )
 
     # Change any existing long TTLs to shorter ones
@@ -40,7 +42,7 @@ def fix_webhook_redis_usage():
     content = content.replace("3600*24", "3600")  # 24h -> 1h
 
     print(f"Writing updated {webhook_path}...")
-    with open(webhook_path, 'w') as f:
+    with open(webhook_path, "w") as f:
         f.write(content)
 
     print("✅ Fixed webhook router - reduced idempotency TTL to 1 hour")
@@ -53,7 +55,7 @@ def fix_health_check_caching():
     main_path = Path(__file__).parent.parent / "backend" / "main.py"
 
     print(f"Reading {main_path}...")
-    with open(main_path, 'r') as f:
+    with open(main_path, "r") as f:
         content = f.read()
 
     # Add caching logic if not present
@@ -86,11 +88,11 @@ def check_redis_healthy():
         # Add after imports
         content = content.replace(
             "from backend.config import settings",
-            "from backend.config import settings\n" + health_check_snippet
+            "from backend.config import settings\n" + health_check_snippet,
         )
 
         print(f"Writing updated {main_path}...")
-        with open(main_path, 'w') as f:
+        with open(main_path, "w") as f:
             f.write(content)
 
         print("✅ Fixed main.py - added Redis health check caching")
@@ -118,5 +120,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

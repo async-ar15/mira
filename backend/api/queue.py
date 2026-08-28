@@ -50,6 +50,7 @@ router = APIRouter(
 # Returns in-flight reviews and reviews awaiting human approval.
 # =============================================================================
 
+
 @router.get(
     "/queue",
     response_model=QueueResponse,
@@ -107,7 +108,10 @@ async def get_queue_endpoint(
 
     logger.info(
         "GET /api/v1/queue | limit=%d offset=%d -> %d/%d items",
-        limit, offset, len(items), total,
+        limit,
+        offset,
+        len(items),
+        total,
     )
 
     return QueueResponse(

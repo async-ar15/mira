@@ -78,6 +78,7 @@ _engine = LangGraphEngine()
 # The remaining arguments match what enqueue_review_job() passes.
 # =============================================================================
 
+
 async def run_pr_review(
     ctx: dict[str, Any],
     workflow_id: str,
@@ -143,7 +144,9 @@ async def run_pr_review(
         # a review that already completed and saved partially).
         logger.error(
             "run_pr_review | unhandled_engine_error | workflow_id=%s error=%s",
-            workflow_id, e, exc_info=True,
+            workflow_id,
+            e,
+            exc_info=True,
         )
         await redis_client.set_workflow_status(workflow_id, "failed")
         return {
@@ -186,12 +189,16 @@ async def run_pr_review(
     # The review result has already been saved — nothing is lost.
     # -------------------------------------------------------------------------
     if result.status.value == "completed":
-        repo_full_name = input_data.get("repo_full_name", "")  # flat key set by webhook router
+        repo_full_name = input_data.get(
+            "repo_full_name", ""
+        )  # flat key set by webhook router
         if repo_full_name:
             try:
                 # Build settings inline — WorkerSettings is defined later in this
                 # file, so we can't reference it here without a forward reference.
-                arq_redis = await create_pool(RedisSettings.from_dsn(get_settings().redis_url))
+                arq_redis = await create_pool(
+                    RedisSettings.from_dsn(get_settings().redis_url)
+                )
                 await arq_redis.enqueue_job(
                     "ingest_repository_job",
                     repo_full_name,
@@ -199,14 +206,17 @@ async def run_pr_review(
                 await arq_redis.aclose()
                 logger.info(
                     "ingestion_enqueued | repo=%s workflow_id=%s",
-                    repo_full_name, workflow_id,
+                    repo_full_name,
+                    workflow_id,
                 )
             except Exception as e:
                 # Non-fatal: review is already saved. Ingestion will happen
                 # on the NEXT successful review for this repo.
                 logger.warning(
                     "ingestion_enqueue_failed | repo=%s error=%s: %s",
-                    repo_full_name, type(e).__name__, e,
+                    repo_full_name,
+                    type(e).__name__,
+                    e,
                 )
 
     # Return a summary dict — ARQ logs this. Phase 10 will send this to traces.
@@ -227,6 +237,7 @@ async def run_pr_review(
 # The router does NOT import ARQ directly — it calls this function.
 # (Law of Demeter: router talks to this module, not to ARQ directly.)
 # =============================================================================
+
 
 async def enqueue_review_job(
     workflow_id: str,
@@ -287,10 +298,10 @@ async def enqueue_review_job(
 
     try:
         job = await arq_pool.enqueue_job(
-            "run_pr_review",           # the worker function name (as string)
-            workflow_id,               # positional arg 1
-            input_data,                # positional arg 2
-            _job_id=workflow_id,       # ARQ job ID = workflow_id (for deduplication within ARQ)
+            "run_pr_review",  # the worker function name (as string)
+            workflow_id,  # positional arg 1
+            input_data,  # positional arg 2
+            _job_id=workflow_id,  # ARQ job ID = workflow_id (for deduplication within ARQ)
         )
         logger.info(
             "job_enqueued | workflow_id=%s arq_job_id=%s",
@@ -309,6 +320,7 @@ async def enqueue_review_job(
 #
 # ARQ contract: first arg is ctx (ARQ dict), rest are the job payload args.
 # =============================================================================
+
 
 async def ingest_repository_job(ctx: dict, repo_full_name: str) -> dict:
     """
@@ -351,6 +363,7 @@ async def ingest_repository_job(ctx: dict, repo_full_name: str) -> dict:
 # When we run `arq backend.job_queue.arq_worker.WorkerSettings`
 # ARQ reads this class to know: which functions to run, Redis URL, concurrency.
 # =============================================================================
+
 
 class WorkerSettings:
     """

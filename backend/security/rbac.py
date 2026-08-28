@@ -55,6 +55,7 @@ from enum import Enum
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, Enum):  # type: ignore[no-redef]
         pass
 
@@ -63,11 +64,13 @@ except ImportError:
 # Role & Permission enumerations
 # ---------------------------------------------------------------------------
 
+
 class Role(StrEnum):
     """
     Operator roles — ordered from least to most privileged.
     The integer ordering is used by requires_at_least().
     """
+
     VIEWER = "viewer"
     REVIEWER = "reviewer"
     ADMIN = "admin"
@@ -87,6 +90,7 @@ class Permission(StrEnum):
     OVERRIDE_VERDICT   -- POST /api/v1/reviews/{id}/override
     VIEW_COST_REPORT   -- GET /api/v1/admin/costs (Phase 16)
     """
+
     READ_REVIEWS = "read_reviews"
     READ_AUDIT_LOG = "read_audit_log"
     READ_QUEUE = "read_queue"
@@ -102,22 +106,28 @@ class Permission(StrEnum):
 # ---------------------------------------------------------------------------
 # ADDITIVE: each level includes all permissions from levels below it.
 
-_VIEWER_PERMISSIONS: frozenset[Permission] = frozenset({
-    Permission.READ_REVIEWS,
-    Permission.READ_AUDIT_LOG,
-    Permission.READ_QUEUE,
-})
+_VIEWER_PERMISSIONS: frozenset[Permission] = frozenset(
+    {
+        Permission.READ_REVIEWS,
+        Permission.READ_AUDIT_LOG,
+        Permission.READ_QUEUE,
+    }
+)
 
-_REVIEWER_PERMISSIONS: frozenset[Permission] = _VIEWER_PERMISSIONS | frozenset({
-    Permission.SUBMIT_REVIEW,
-    Permission.TRIGGER_EVAL,
-    Permission.VIEW_COST_REPORT,
-})
+_REVIEWER_PERMISSIONS: frozenset[Permission] = _VIEWER_PERMISSIONS | frozenset(
+    {
+        Permission.SUBMIT_REVIEW,
+        Permission.TRIGGER_EVAL,
+        Permission.VIEW_COST_REPORT,
+    }
+)
 
-_ADMIN_PERMISSIONS: frozenset[Permission] = _REVIEWER_PERMISSIONS | frozenset({
-    Permission.MANAGE_API_KEYS,
-    Permission.OVERRIDE_VERDICT,
-})
+_ADMIN_PERMISSIONS: frozenset[Permission] = _REVIEWER_PERMISSIONS | frozenset(
+    {
+        Permission.MANAGE_API_KEYS,
+        Permission.OVERRIDE_VERDICT,
+    }
+)
 
 ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
     Role.VIEWER: _VIEWER_PERMISSIONS,
@@ -137,6 +147,7 @@ _ROLE_ORDER: dict[Role, int] = {
 # PermissionDeniedError
 # ---------------------------------------------------------------------------
 
+
 class PermissionDeniedError(Exception):
     """
     Raised when a role lacks a required permission.
@@ -154,9 +165,7 @@ class PermissionDeniedError(Exception):
         self.role = role
         self.permission = permission
         self.status_code = 403
-        _msg = message or (
-            f"Role '{role}' does not have permission '{permission}'"
-        )
+        _msg = message or (f"Role '{role}' does not have permission '{permission}'")
         super().__init__(_msg)
 
     def to_dict(self) -> dict[str, str]:
@@ -172,6 +181,7 @@ class PermissionDeniedError(Exception):
 # ---------------------------------------------------------------------------
 # RBACPolicy
 # ---------------------------------------------------------------------------
+
 
 class RBACPolicy:
     """
@@ -243,6 +253,7 @@ DEFAULT_RBAC_POLICY = RBACPolicy()
 # FastAPI dependency factory
 # ---------------------------------------------------------------------------
 
+
 def require_permission(permission: Permission) -> Callable[..., Role]:
     """
     FastAPI Depends() factory. Returns a dependency that:
@@ -265,6 +276,7 @@ def require_permission(permission: Permission) -> Callable[..., Role]:
     Both dependencies should be used together:
         dependencies=[Depends(require_auth), Depends(require_permission(...))]
     """
+
     def _check_role(
         # Lazy import to avoid circular dependency at module load time
         # (FastAPI is not available in unit tests unless installed)

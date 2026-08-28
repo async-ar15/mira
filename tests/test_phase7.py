@@ -51,6 +51,7 @@ def make_settings(**overrides):
     routes requests through MockTransport without touching api.github.com.
     """
     from backend.config.settings import Settings
+
     defaults = dict(
         google_api_key="test-key",
         github_webhook_secret="test-secret",
@@ -154,6 +155,7 @@ def mock_response(
 
 # ─── Test suite ──────────────────────────────────────────────────────────────
 
+
 def run_all_tests():
     results = []
     total = 0
@@ -249,7 +251,9 @@ def run_all_tests():
         init_file = next(f for f in files if "__init__" in f.filename)
         assert init_file.patch is None, "Missing patch should be None, not crash"
 
-    assert_test("get_pr_files returns list[PRFile] with correct fields", test_get_pr_files)
+    assert_test(
+        "get_pr_files returns list[PRFile] with correct fields", test_get_pr_files
+    )
 
     # ─── Test 4: 5xx triggers exactly 3 retry attempts ────────────────────────
     async def test_retry_on_5xx():
@@ -308,7 +312,9 @@ def run_all_tests():
                 f"404 should NOT retry. Expected 1 call, got {call_count}"
             )
 
-    assert_test("404 raises GitHubNotFoundError without retrying", test_404_raises_not_found)
+    assert_test(
+        "404 raises GitHubNotFoundError without retrying", test_404_raises_not_found
+    )
 
     # ─── Test 6: 429 raises GitHubRateLimitError ──────────────────────────────
     async def test_429_raises_rate_limit_error():
@@ -358,7 +364,10 @@ def run_all_tests():
                 f"Expected retry_after_seconds=300, got {e.retry_after_seconds}"
             )
 
-    assert_test("GitHubRateLimitError carries correct retry_after_seconds", test_rate_limit_retry_after)
+    assert_test(
+        "GitHubRateLimitError carries correct retry_after_seconds",
+        test_rate_limit_retry_after,
+    )
 
     # ─── Test 8: PRReviewState has pr_title + author_login fields ─────────────
     async def test_state_has_metadata_fields():
@@ -376,11 +385,11 @@ def run_all_tests():
             "retrieved_context",
         ]
         missing = [f for f in required_phase7_fields if f not in annotations]
-        assert not missing, (
-            f"PRReviewState is missing Phase 7 fields: {missing}"
-        )
+        assert not missing, f"PRReviewState is missing Phase 7 fields: {missing}"
 
-    assert_test("PRReviewState has all Phase 7 metadata fields", test_state_has_metadata_fields)
+    assert_test(
+        "PRReviewState has all Phase 7 metadata fields", test_state_has_metadata_fields
+    )
 
     # ─── Test 9: Rate limit warning fires when X-RateLimit-Remaining < 100 ────
     async def test_rate_limit_warning_logged():
@@ -425,7 +434,10 @@ def run_all_tests():
             f"All warnings: {warning_messages}"
         )
 
-    assert_test("Rate limit warning fires when X-RateLimit-Remaining < 100", test_rate_limit_warning_logged)
+    assert_test(
+        "Rate limit warning fires when X-RateLimit-Remaining < 100",
+        test_rate_limit_warning_logged,
+    )
 
     # ─── Summary ──────────────────────────────────────────────────────────────
     print(f"\nResults: {passed}/{total} passed")
@@ -469,6 +481,7 @@ def _build_client_with_transport(settings, transport: httpx.MockTransport):
     # Close original (no-op: no connections opened yet) — suppress the warning
     # that comes from garbage-collecting an unclosed client.
     import asyncio as _asyncio
+
     try:
         loop = _asyncio.get_event_loop()
         if loop.is_running():

@@ -75,6 +75,7 @@ router = APIRouter(
 # Returns a paginated list of review summaries.
 # =============================================================================
 
+
 @router.get(
     "/reviews",
     response_model=ReviewListResponse,
@@ -115,7 +116,7 @@ async def list_reviews_endpoint(
         description="Number of reviews to skip (for pagination).",
     ),
     # Dependencies
-    _auth: None = Depends(require_auth),      # enforces API key
+    _auth: None = Depends(require_auth),  # enforces API key
     session: AsyncSession = Depends(get_db),  # injects DB session
 ) -> ReviewListResponse:
     """
@@ -147,7 +148,12 @@ async def list_reviews_endpoint(
 
     logger.info(
         "GET /api/v1/reviews | repo=%s status=%s limit=%d offset=%d -> %d/%d",
-        repo, status_filter, limit, offset, len(summaries), total,
+        repo,
+        status_filter,
+        limit,
+        offset,
+        len(summaries),
+        total,
     )
 
     return ReviewListResponse(
@@ -163,6 +169,7 @@ async def list_reviews_endpoint(
 #
 # Returns the full review detail, including all findings.
 # =============================================================================
+
 
 @router.get(
     "/reviews/{review_id:path}",
@@ -226,7 +233,9 @@ async def get_review_endpoint(
     if live_status and live_status != record.status:
         logger.debug(
             "GET /api/v1/reviews/%s | overlaying Redis status=%s over Postgres status=%s",
-            review_id, live_status, record.status,
+            review_id,
+            live_status,
+            record.status,
         )
         record.status = live_status
 
@@ -235,7 +244,10 @@ async def get_review_endpoint(
 
     logger.info(
         "GET /api/v1/reviews/%s -> status=%s verdict=%s findings=%d",
-        review_id, detail.status, detail.verdict, len(detail.findings),
+        review_id,
+        detail.status,
+        detail.verdict,
+        len(detail.findings),
     )
 
     return detail

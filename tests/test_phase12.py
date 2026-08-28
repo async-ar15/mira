@@ -58,17 +58,23 @@ from backend.reliability.timeout import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-ZERO_DELAY = RetryConfig(max_attempts=3, base_delay_s=0.0, max_delay_s=0.0, jitter=False)
-ZERO_DELAY_2 = RetryConfig(max_attempts=2, base_delay_s=0.0, max_delay_s=0.0, jitter=False)
-FAST_BREAKER = BreakerConfig(failure_threshold=3, recovery_timeout_s=0.05, name="test_breaker")
+ZERO_DELAY = RetryConfig(
+    max_attempts=3, base_delay_s=0.0, max_delay_s=0.0, jitter=False
+)
+ZERO_DELAY_2 = RetryConfig(
+    max_attempts=2, base_delay_s=0.0, max_delay_s=0.0, jitter=False
+)
+FAST_BREAKER = BreakerConfig(
+    failure_threshold=3, recovery_timeout_s=0.05, name="test_breaker"
+)
 
 
 # ===========================================================================
 # GROUP A — Retry
 # ===========================================================================
 
-class TestRetry:
 
+class TestRetry:
     def test_succeeds_on_first_try(self):
         """A function that succeeds immediately should not retry."""
         call_count = 0
@@ -104,6 +110,7 @@ class TestRetry:
         When all attempts fail, RetryExhaustedError must be raised
         with the correct attempt count and last_exception.
         """
+
         def always_fails():
             raise RuntimeError("permanent")
 
@@ -120,6 +127,7 @@ class TestRetry:
         (with overwhelming probability). Validates _compute_delay randomness.
         """
         from backend.reliability.retry import _compute_delay
+
         config = RetryConfig(base_delay_s=1.0, max_delay_s=10.0, jitter=True)
         delays = {_compute_delay(0, config) for _ in range(10)}
         # 10 samples should produce at least 2 distinct values
@@ -145,8 +153,8 @@ class TestRetry:
 # GROUP B — Circuit Breaker
 # ===========================================================================
 
-class TestCircuitBreaker:
 
+class TestCircuitBreaker:
     def setup_method(self):
         """Each test gets a fresh breaker to avoid state bleed."""
         self.breaker = CircuitBreaker(FAST_BREAKER)
@@ -183,7 +191,7 @@ class TestCircuitBreaker:
         with pytest.raises(CircuitOpenError) as exc_info:
             self.breaker.call(fn)
 
-        assert call_count[0] == 0   # fn was never called
+        assert call_count[0] == 0  # fn was never called
         assert "test_breaker" in str(exc_info.value)
 
     def test_transitions_to_half_open_after_recovery_timeout(self):
@@ -235,11 +243,12 @@ class TestCircuitBreaker:
 # GROUP C — Timeout
 # ===========================================================================
 
-class TestTimeout:
 
+class TestTimeout:
     @pytest.mark.asyncio
     async def test_fast_coroutine_completes(self):
         """A coroutine that returns quickly should succeed."""
+
         async def fast():
             return "fast_result"
 
@@ -249,6 +258,7 @@ class TestTimeout:
     @pytest.mark.asyncio
     async def test_slow_coroutine_raises_agent_timeout_error(self):
         """A coroutine that exceeds its deadline must raise AgentTimeoutError."""
+
         async def slow():
             await asyncio.sleep(10)
             return "should not reach"
@@ -266,6 +276,7 @@ class TestTimeout:
         When one agent times out, the others should still return their results.
         Validates the Partial Results Doctrine.
         """
+
         async def agent_fast():
             return "fast_ok"
 
@@ -294,6 +305,7 @@ class TestTimeout:
         All agents that complete within timeout must have their results
         fully preserved even if another agent times out.
         """
+
         async def agent_a():
             return {"verdict": "APPROVE", "agent": "a"}
 
@@ -321,8 +333,8 @@ class TestTimeout:
 # GROUP D — Idempotency
 # ===========================================================================
 
-class TestIdempotency:
 
+class TestIdempotency:
     def test_new_key_runs_fn(self):
         """First call with a new key should run fn and store the result."""
         store = InMemoryIdempotencyStore()
@@ -346,19 +358,19 @@ class TestIdempotency:
             calls.append(1)
             return "original"
 
-        idempotency_guard(store, "key2", fn)         # First call — runs fn
+        idempotency_guard(store, "key2", fn)  # First call — runs fn
         result, was_cached = idempotency_guard(store, "key2", fn)  # Second call
 
         assert result == "original"
         assert was_cached is True
-        assert len(calls) == 1   # fn was NOT called a second time
+        assert len(calls) == 1  # fn was NOT called a second time
 
     def test_mark_complete_is_idempotent(self):
         """Calling mark_complete twice on the same key should not raise."""
         store = InMemoryIdempotencyStore()
         store.set_in_flight("key3")
         store.mark_complete("key3", "first")
-        store.mark_complete("key3", "second")   # Should overwrite, not raise
+        store.mark_complete("key3", "second")  # Should overwrite, not raise
         record = store.get("key3")
         assert record is not None
         assert record.status == "complete"
@@ -372,6 +384,7 @@ class TestIdempotency:
             def fn():
                 results[name] = True
                 return name
+
             return fn
 
         idempotency_guard(store, "key_a", make_fn("a"))
@@ -386,15 +399,15 @@ class TestIdempotency:
         key = dedup.make_key(pr_id="42", sha="abc123")
 
         assert dedup.is_already_processing(key) is False  # First — starts it
-        assert dedup.is_already_processing(key) is True   # Second — already in_flight
+        assert dedup.is_already_processing(key) is True  # Second — already in_flight
 
 
 # ===========================================================================
 # GROUP E — Integration
 # ===========================================================================
 
-class TestIntegration:
 
+class TestIntegration:
     def test_retry_plus_circuit_breaker_compose(self):
         """
         CircuitBreaker wrapping a retried call: if the underlying fn
@@ -419,7 +432,7 @@ class TestIntegration:
         with pytest.raises(CircuitOpenError):
             breaker.call(failing_fn)
 
-        assert call_count[0] == 2   # fn only called during the 2 tripping calls
+        assert call_count[0] == 2  # fn only called during the 2 tripping calls
 
     @pytest.mark.asyncio
     async def test_timeout_sets_partial_review_flag(self):
@@ -427,6 +440,7 @@ class TestIntegration:
         When run_agents_with_per_agent_timeout returns a mix of results
         and AgentTimeoutErrors, the caller should detect partial_review.
         """
+
         async def ok_agent():
             return "ok"
 
@@ -478,6 +492,7 @@ class TestIntegration:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _always_raise():
     raise RuntimeError("deliberate failure")

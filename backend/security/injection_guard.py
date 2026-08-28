@@ -47,6 +47,7 @@ from enum import Enum
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, Enum):  # type: ignore[no-redef]
         pass
 
@@ -55,11 +56,13 @@ except ImportError:
 # Severity
 # ---------------------------------------------------------------------------
 
+
 class InjectionSeverity(StrEnum):
     """How dangerous this injection pattern is."""
-    LOW = "low"          # Suspicious but likely benign (e.g. casual "ignore this")
-    MEDIUM = "medium"    # Clear attempt but low exploitation potential
-    HIGH = "high"        # Strong injection signal — sanitise and warn
+
+    LOW = "low"  # Suspicious but likely benign (e.g. casual "ignore this")
+    MEDIUM = "medium"  # Clear attempt but low exploitation potential
+    HIGH = "high"  # Strong injection signal — sanitise and warn
     CRITICAL = "critical"  # Direct override attempt — recommend block
 
 
@@ -67,13 +70,15 @@ class InjectionSeverity(StrEnum):
 # Pattern catalogue
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class InjectionPattern:
     """One entry in the prompt injection pattern catalogue."""
-    name: str                    # Human-readable identifier
-    pattern: re.Pattern[str]     # Compiled regex
+
+    name: str  # Human-readable identifier
+    pattern: re.Pattern[str]  # Compiled regex
     severity: InjectionSeverity
-    description: str             # What this pattern targets
+    description: str  # What this pattern targets
 
 
 # The catalogue is intentionally verbose — each entry documents what
@@ -110,7 +115,6 @@ INJECTION_PATTERNS: list[InjectionPattern] = [
         severity=InjectionSeverity.CRITICAL,
         description="Urgency-flagged instruction override attempt.",
     ),
-
     # -----------------------------------------------------------------------
     # Category 2: Role / persona hijack
     # -----------------------------------------------------------------------
@@ -142,7 +146,6 @@ INJECTION_PATTERNS: list[InjectionPattern] = [
         severity=InjectionSeverity.CRITICAL,
         description="Known jailbreak activation keyword.",
     ),
-
     # -----------------------------------------------------------------------
     # Category 3: Context exfiltration
     # -----------------------------------------------------------------------
@@ -168,7 +171,6 @@ INJECTION_PATTERNS: list[InjectionPattern] = [
         severity=InjectionSeverity.HIGH,
         description="Direct request to reveal system prompt contents.",
     ),
-
     # -----------------------------------------------------------------------
     # Category 4: Context anchor / separator injection
     # -----------------------------------------------------------------------
@@ -191,7 +193,6 @@ INJECTION_PATTERNS: list[InjectionPattern] = [
         severity=InjectionSeverity.HIGH,
         description="Attempt to close the system context with a marker tag.",
     ),
-
     # -----------------------------------------------------------------------
     # Category 5: Review verdict manipulation
     # -----------------------------------------------------------------------
@@ -229,6 +230,7 @@ _PATTERNS_BY_SEVERITY = sorted(
 # InjectionResult
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class InjectionResult:
     """
@@ -242,6 +244,7 @@ class InjectionResult:
         sanitized_text    -- Text with matched regions replaced by [REDACTED].
                              Identical to original when detected is False.
     """
+
     detected: bool
     threat_level: InjectionSeverity | None
     matched_patterns: list[str] = field(default_factory=list)
@@ -269,6 +272,7 @@ _SEVERITY_ORDER = {
 # ---------------------------------------------------------------------------
 # PromptInjectionDetector
 # ---------------------------------------------------------------------------
+
 
 class PromptInjectionDetector:
     """
@@ -318,7 +322,10 @@ class PromptInjectionDetector:
 
         for pattern_entry in self._patterns:
             # Skip patterns below the minimum severity threshold
-            if _SEVERITY_ORDER[pattern_entry.severity] < _SEVERITY_ORDER[self._min_severity]:
+            if (
+                _SEVERITY_ORDER[pattern_entry.severity]
+                < _SEVERITY_ORDER[self._min_severity]
+            ):
                 continue
 
             matches = list(pattern_entry.pattern.finditer(text))
@@ -395,7 +402,9 @@ class PromptInjectionDetector:
         return InjectionResult(
             detected=detected,
             threat_level=max_severity,
-            matched_patterns=list(dict.fromkeys(all_patterns)),  # deduplicate, preserve order
+            matched_patterns=list(
+                dict.fromkeys(all_patterns)
+            ),  # deduplicate, preserve order
             evidence_snippets=all_evidence,
             sanitized_text="",  # multi-field result — no single sanitized_text
         )
@@ -404,6 +413,7 @@ class PromptInjectionDetector:
 # ---------------------------------------------------------------------------
 # Module-level convenience function
 # ---------------------------------------------------------------------------
+
 
 def check_pr_for_injection(
     title: str = "",

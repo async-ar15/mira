@@ -52,6 +52,7 @@ logger = logging.getLogger(__name__)
 # Data types
 # ─────────────────────────────────────────────────────────────
 
+
 @dataclass
 class EvalResult:
     """
@@ -59,6 +60,7 @@ class EvalResult:
 
     Maps 1:1 to a GoldenPR entry after run_suite() completes.
     """
+
     example_id: str
     difficulty: str
     category: str
@@ -67,7 +69,7 @@ class EvalResult:
     verdict_correct: bool
     finding_coverage: float
     severity_accuracy: float
-    score: float            # JudgeScore.overall_score
+    score: float  # JudgeScore.overall_score
     reasoning: str
 
 
@@ -78,10 +80,11 @@ class SliceMetrics:
 
     Wiki (MetricsWithoutContext): always report per-slice, not just aggregate.
     """
+
     slice_name: str
     count: int
     mean_score: float
-    pass_rate: float        # fraction with score >= PASS_THRESHOLD
+    pass_rate: float  # fraction with score >= PASS_THRESHOLD
     min_score: float
     max_score: float
 
@@ -90,15 +93,18 @@ class SliceMetrics:
 # Thresholds
 # ─────────────────────────────────────────────────────────────
 
-PASS_THRESHOLD = 0.70      # aggregate and per-example minimum
-SLICE_THRESHOLD = 0.60     # minimum mean score for any single slice
-REGRESSION_DELTA = 0.05    # block if baseline drops by more than this (absolute)
-PER_EXAMPLE_REGRESSION = 0.10  # an individual example "regresses" if score drops this much
+PASS_THRESHOLD = 0.70  # aggregate and per-example minimum
+SLICE_THRESHOLD = 0.60  # minimum mean score for any single slice
+REGRESSION_DELTA = 0.05  # block if baseline drops by more than this (absolute)
+PER_EXAMPLE_REGRESSION = (
+    0.10  # an individual example "regresses" if score drops this much
+)
 
 
 # ─────────────────────────────────────────────────────────────
 # Main class
 # ─────────────────────────────────────────────────────────────
+
 
 class RegressionGate:
     """
@@ -154,18 +160,20 @@ class RegressionGate:
             except Exception as exc:
                 logger.error("run_fn crashed on example %s: %s", pr.id, exc)
                 # Score 0.0 for crashed examples -- do not skip silently.
-                results.append(EvalResult(
-                    example_id=pr.id,
-                    difficulty=pr.difficulty,
-                    category=pr.category,
-                    expected_verdict=pr.expected_verdict,
-                    actual_verdict="ERROR",
-                    verdict_correct=False,
-                    finding_coverage=0.0,
-                    severity_accuracy=0.0,
-                    score=0.0,
-                    reasoning=f"run_fn raised: {exc}",
-                ))
+                results.append(
+                    EvalResult(
+                        example_id=pr.id,
+                        difficulty=pr.difficulty,
+                        category=pr.category,
+                        expected_verdict=pr.expected_verdict,
+                        actual_verdict="ERROR",
+                        verdict_correct=False,
+                        finding_coverage=0.0,
+                        severity_accuracy=0.0,
+                        score=0.0,
+                        reasoning=f"run_fn raised: {exc}",
+                    )
+                )
                 continue
 
             try:
@@ -176,32 +184,36 @@ class RegressionGate:
                 )
             except Exception as exc:
                 logger.error("judge.score_review crashed on example %s: %s", pr.id, exc)
-                results.append(EvalResult(
+                results.append(
+                    EvalResult(
+                        example_id=pr.id,
+                        difficulty=pr.difficulty,
+                        category=pr.category,
+                        expected_verdict=pr.expected_verdict,
+                        actual_verdict=actual_verdict,
+                        verdict_correct=False,
+                        finding_coverage=0.0,
+                        severity_accuracy=0.0,
+                        score=0.0,
+                        reasoning=f"judge.score_review raised: {exc}",
+                    )
+                )
+                continue
+
+            results.append(
+                EvalResult(
                     example_id=pr.id,
                     difficulty=pr.difficulty,
                     category=pr.category,
                     expected_verdict=pr.expected_verdict,
                     actual_verdict=actual_verdict,
-                    verdict_correct=False,
-                    finding_coverage=0.0,
-                    severity_accuracy=0.0,
-                    score=0.0,
-                    reasoning=f"judge.score_review raised: {exc}",
-                ))
-                continue
-
-            results.append(EvalResult(
-                example_id=pr.id,
-                difficulty=pr.difficulty,
-                category=pr.category,
-                expected_verdict=pr.expected_verdict,
-                actual_verdict=actual_verdict,
-                verdict_correct=js.verdict_correct,
-                finding_coverage=js.finding_coverage,
-                severity_accuracy=js.severity_accuracy,
-                score=js.overall_score,
-                reasoning=js.reasoning,
-            ))
+                    verdict_correct=js.verdict_correct,
+                    finding_coverage=js.finding_coverage,
+                    severity_accuracy=js.severity_accuracy,
+                    score=js.overall_score,
+                    reasoning=js.reasoning,
+                )
+            )
 
         return results
 
@@ -330,7 +342,8 @@ class RegressionGate:
         current_scores = {r.example_id: r.score for r in results}
         current_aggregate = (
             sum(current_scores.values()) / len(current_scores)
-            if current_scores else 0.0
+            if current_scores
+            else 0.0
         )
 
         # Gate 1: aggregate regression
@@ -351,11 +364,11 @@ class RegressionGate:
                 if per_delta < -PER_EXAMPLE_REGRESSION:
                     regressions.append((example_id, per_delta))
 
-        regression_rate = len(regressions) / len(current_scores) if current_scores else 0.0
+        regression_rate = (
+            len(regressions) / len(current_scores) if current_scores else 0.0
+        )
         if regression_rate > 0.05:
-            reg_list = ", ".join(
-                f"{eid}({d:+.2f})" for eid, d in regressions[:5]
-            )
+            reg_list = ", ".join(f"{eid}({d:+.2f})" for eid, d in regressions[:5])
             return False, (
                 f"Too many per-example regressions: {len(regressions)}/{len(current_scores)} "
                 f"({regression_rate:.1%}) dropped by >{PER_EXAMPLE_REGRESSION}. "
@@ -386,7 +399,9 @@ class RegressionGate:
         Called after a successful gate pass to update the reference point.
         """
         scores_by_id = {r.example_id: r.score for r in results}
-        aggregate = sum(scores_by_id.values()) / len(scores_by_id) if scores_by_id else 0.0
+        aggregate = (
+            sum(scores_by_id.values()) / len(scores_by_id) if scores_by_id else 0.0
+        )
 
         payload = {
             "aggregate": aggregate,
@@ -399,7 +414,9 @@ class RegressionGate:
         path = Path(baseline_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload, indent=2))
-        logger.info("Saved eval baseline to %s (aggregate=%.3f)", baseline_path, aggregate)
+        logger.info(
+            "Saved eval baseline to %s (aggregate=%.3f)", baseline_path, aggregate
+        )
 
     def load_baseline(
         self,
@@ -419,6 +436,7 @@ class RegressionGate:
         except (json.JSONDecodeError, OSError) as exc:
             logger.warning(
                 "Could not load baseline from %s: %s -- treating as first run.",
-                baseline_path, exc,
+                baseline_path,
+                exc,
             )
             return None

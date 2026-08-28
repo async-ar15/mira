@@ -126,6 +126,7 @@ _BUILTIN_PATTERNS: dict[str, re.Pattern[str]] = {
 # MaskingPolicy
 # ---------------------------------------------------------------------------
 
+
 class MaskingPolicy:
     """
     Configures what gets masked.
@@ -142,7 +143,7 @@ class MaskingPolicy:
 
     #: Env-var names (same naming convention as opensre)
     _ENV_ENABLED = "PR_REVIEW_MASK_ENABLED"
-    _ENV_KINDS = "PR_REVIEW_MASK_KINDS"        # comma-separated SensitiveKind names
+    _ENV_KINDS = "PR_REVIEW_MASK_KINDS"  # comma-separated SensitiveKind names
     _ENV_EXTRA = "PR_REVIEW_MASK_EXTRA_REGEX"  # JSON {"label": "regex", ...}
 
     def __init__(
@@ -192,7 +193,9 @@ class MaskingPolicy:
             try:
                 extra_patterns = json.loads(extra_raw)
             except json.JSONDecodeError:
-                logger.warning("[masking] PR_REVIEW_MASK_EXTRA_REGEX is not valid JSON — ignoring")
+                logger.warning(
+                    "[masking] PR_REVIEW_MASK_EXTRA_REGEX is not valid JSON — ignoring"
+                )
 
         return cls(enabled=enabled, kinds=kinds, extra_patterns=extra_patterns)
 
@@ -204,9 +207,11 @@ class MaskingPolicy:
 # DetectedSpan (internal)
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True, order=True)
 class _DetectedSpan:
     """Internal: a matched sensitive span in text."""
+
     start: int
     end: int
     kind: str
@@ -272,6 +277,7 @@ def _resolve_overlaps(spans: list[_DetectedSpan]) -> list[_DetectedSpan]:
 # MaskingContext
 # ---------------------------------------------------------------------------
 
+
 class MaskingContext:
     """
     Stable masking state for one review session.
@@ -331,7 +337,7 @@ class MaskingContext:
         parts: list[str] = []
         cursor = 0
         for span in spans:
-            parts.append(text[cursor:span.start])
+            parts.append(text[cursor : span.start])
             placeholder = self._get_or_create_placeholder(span.kind, span.value)
             parts.append(placeholder)
             cursor = span.end
@@ -366,6 +372,7 @@ class MaskingContext:
 # Module-level convenience wrappers
 # ---------------------------------------------------------------------------
 
+
 def redact_text(
     text: str,
     *,
@@ -398,6 +405,7 @@ def unmask_text(text: str, placeholder_map: dict[str, str]) -> str:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _parse_bool(value: str) -> bool:
     """Parse a string to bool. Defaults to True for empty / unset."""

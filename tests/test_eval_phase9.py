@@ -43,6 +43,7 @@ from backend.evaluation.regression_gate import (
 # Helpers
 # ─────────────────────────────────────────────────────────────
 
+
 def _make_mock_llm(json_payload: dict) -> MagicMock:
     """
     Return a MagicMock LLMClient whose .complete() returns a scripted response.
@@ -82,8 +83,8 @@ def _make_eval_result(
 # GROUP A: Golden Dataset (5 tests)
 # ─────────────────────────────────────────────────────────────
 
-class TestGoldenDataset:
 
+class TestGoldenDataset:
     def test_load_returns_12_examples(self):
         """
         Golden dataset must have exactly 12 entries as planned.
@@ -155,8 +156,8 @@ class TestGoldenDataset:
 # GROUP B: LLM-as-Judge (5 tests)
 # ─────────────────────────────────────────────────────────────
 
-class TestPRReviewJudge:
 
+class TestPRReviewJudge:
     def test_judge_score_fields_present_and_typed(self):
         """
         JudgeScore must have all expected fields with correct types.
@@ -184,11 +185,13 @@ class TestPRReviewJudge:
         When actual_verdict matches expected and LLM returns perfect scores,
         overall_score should be >= PASS_THRESHOLD (0.70) and ideally near 1.0.
         """
-        mock_llm = _make_mock_llm({
-            "finding_coverage": 1.0,
-            "severity_accuracy": 1.0,
-            "reasoning": "Perfect match",
-        })
+        mock_llm = _make_mock_llm(
+            {
+                "finding_coverage": 1.0,
+                "severity_accuracy": 1.0,
+                "reasoning": "Perfect match",
+            }
+        )
         judge = PRReviewJudge(llm_client=mock_llm)
 
         golden = GoldenPR(
@@ -197,9 +200,7 @@ class TestPRReviewJudge:
             pr_description="",
             diff_snippet="",
             expected_verdict="approve",
-            expected_findings=(
-                ExpectedFinding("security", "high", "injection"),
-            ),
+            expected_findings=(ExpectedFinding("security", "high", "injection"),),
             difficulty="easy",
             category="security",
             notes="",
@@ -208,11 +209,13 @@ class TestPRReviewJudge:
         score = judge.score_review(
             golden=golden,
             actual_verdict="approve",
-            actual_findings=[{
-                "agent_type": "security",
-                "severity": "high",
-                "summary": "SQL injection detected",
-            }],
+            actual_findings=[
+                {
+                    "agent_type": "security",
+                    "severity": "high",
+                    "summary": "SQL injection detected",
+                }
+            ],
         )
         assert score.verdict_correct is True
         assert score.overall_score >= PASS_THRESHOLD, (
@@ -224,11 +227,13 @@ class TestPRReviewJudge:
         When actual_verdict does not match expected, verdict_correct must be False.
         The composite score should be capped because verdict weight is 0.
         """
-        mock_llm = _make_mock_llm({
-            "finding_coverage": 1.0,
-            "severity_accuracy": 1.0,
-            "reasoning": "Finding OK but wrong verdict",
-        })
+        mock_llm = _make_mock_llm(
+            {
+                "finding_coverage": 1.0,
+                "severity_accuracy": 1.0,
+                "reasoning": "Finding OK but wrong verdict",
+            }
+        )
         judge = PRReviewJudge(llm_client=mock_llm)
 
         golden = GoldenPR(
@@ -237,9 +242,7 @@ class TestPRReviewJudge:
             pr_description="",
             diff_snippet="",
             expected_verdict="needs_human_review",
-            expected_findings=(
-                ExpectedFinding("security", "critical", "secret"),
-            ),
+            expected_findings=(ExpectedFinding("security", "critical", "secret"),),
             difficulty="hard",
             category="security",
             notes="",
@@ -247,12 +250,14 @@ class TestPRReviewJudge:
 
         score = judge.score_review(
             golden=golden,
-            actual_verdict="approve",   # wrong
-            actual_findings=[{
-                "agent_type": "security",
-                "severity": "critical",
-                "summary": "Hardcoded secret found",
-            }],
+            actual_verdict="approve",  # wrong
+            actual_findings=[
+                {
+                    "agent_type": "security",
+                    "severity": "critical",
+                    "summary": "Hardcoded secret found",
+                }
+            ],
         )
         assert score.verdict_correct is False
         # With verdict_weight=0.4, max possible score when verdict is wrong
@@ -267,11 +272,13 @@ class TestPRReviewJudge:
         When the agent's findings miss an expected keyword, finding_coverage
         should be < 1.0, which the LLM judge reflects.
         """
-        mock_llm = _make_mock_llm({
-            "finding_coverage": 0.0,   # agent missed the expected finding
-            "severity_accuracy": 0.0,
-            "reasoning": "Expected SQL injection finding not found",
-        })
+        mock_llm = _make_mock_llm(
+            {
+                "finding_coverage": 0.0,  # agent missed the expected finding
+                "severity_accuracy": 0.0,
+                "reasoning": "Expected SQL injection finding not found",
+            }
+        )
         judge = PRReviewJudge(llm_client=mock_llm)
 
         golden = GoldenPR(
@@ -280,9 +287,7 @@ class TestPRReviewJudge:
             pr_description="",
             diff_snippet="",
             expected_verdict="request_changes",
-            expected_findings=(
-                ExpectedFinding("security", "high", "sql injection"),
-            ),
+            expected_findings=(ExpectedFinding("security", "high", "sql injection"),),
             difficulty="medium",
             category="security",
             notes="",
@@ -291,7 +296,7 @@ class TestPRReviewJudge:
         score = judge.score_review(
             golden=golden,
             actual_verdict="request_changes",
-            actual_findings=[],   # agent produced no findings
+            actual_findings=[],  # agent produced no findings
         )
         assert score.finding_coverage < 1.0, (
             "Expected finding_coverage < 1.0 when agent missed the finding"
@@ -302,11 +307,13 @@ class TestPRReviewJudge:
         calibrate() must return a float in [0.0, 1.0].
         Tests the method signature and return type.
         """
-        mock_llm = _make_mock_llm({
-            "finding_coverage": 1.0,
-            "severity_accuracy": 1.0,
-            "reasoning": "ok",
-        })
+        mock_llm = _make_mock_llm(
+            {
+                "finding_coverage": 1.0,
+                "severity_accuracy": 1.0,
+                "reasoning": "ok",
+            }
+        )
         judge = PRReviewJudge(llm_client=mock_llm)
 
         golden = GoldenPR(
@@ -337,7 +344,9 @@ class TestPRReviewJudge:
         ]
 
         rate = judge.calibrate(calibration_set)
-        assert isinstance(rate, float), f"calibrate() returned {type(rate)}, expected float"
+        assert isinstance(rate, float), (
+            f"calibrate() returned {type(rate)}, expected float"
+        )
         assert 0.0 <= rate <= 1.0, f"calibrate() returned {rate}, expected [0, 1]"
 
 
@@ -345,14 +354,13 @@ class TestPRReviewJudge:
 # GROUP C: Regression Gate -- threshold logic (5 tests)
 # ─────────────────────────────────────────────────────────────
 
-class TestRegressionGate:
 
+class TestRegressionGate:
     def test_check_threshold_passes_when_all_above_minimum(self):
         """All examples >= 0.80 -> aggregate and all slices pass."""
         gate = RegressionGate()
         results = [
-            _make_eval_result(example_id=f"ex_{i}", score=0.80)
-            for i in range(5)
+            _make_eval_result(example_id=f"ex_{i}", score=0.80) for i in range(5)
         ]
         passed, reason = gate.check_threshold(results)
         assert passed, f"Expected pass but got: {reason}"
@@ -364,8 +372,7 @@ class TestRegressionGate:
         """
         gate = RegressionGate()
         results = [
-            _make_eval_result(example_id=f"ex_{i}", score=0.50)
-            for i in range(5)
+            _make_eval_result(example_id=f"ex_{i}", score=0.50) for i in range(5)
         ]
         passed, reason = gate.check_threshold(results)
         assert not passed, "Expected gate to block but it passed"
@@ -382,22 +389,20 @@ class TestRegressionGate:
         gate = RegressionGate()
         # 8 easy examples at 0.90 -> aggregate ~0.78
         easy = [
-            _make_eval_result(
-                example_id=f"easy_{i}", score=0.90, difficulty="easy"
-            )
+            _make_eval_result(example_id=f"easy_{i}", score=0.90, difficulty="easy")
             for i in range(8)
         ]
         # 2 hard examples at 0.45 -> hard-slice mean = 0.45 < SLICE_THRESHOLD
         hard = [
-            _make_eval_result(
-                example_id=f"hard_{i}", score=0.45, difficulty="hard"
-            )
+            _make_eval_result(example_id=f"hard_{i}", score=0.45, difficulty="hard")
             for i in range(2)
         ]
         results = easy + hard
         # Verify aggregate is fine
         agg = sum(r.score for r in results) / len(results)
-        assert agg >= GATE_PASS, f"Setup error: aggregate {agg:.2f} should be >= {GATE_PASS}"
+        assert agg >= GATE_PASS, (
+            f"Setup error: aggregate {agg:.2f} should be >= {GATE_PASS}"
+        )
 
         passed, reason = gate.check_threshold(results)
         assert not passed, (
@@ -415,11 +420,14 @@ class TestRegressionGate:
         gate = RegressionGate()
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             baseline_path = f.name
-            json.dump({
-                "aggregate": 0.85,
-                "scores_by_id": {"ex_0": 0.85, "ex_1": 0.85},
-                "n_examples": 2,
-            }, f)
+            json.dump(
+                {
+                    "aggregate": 0.85,
+                    "scores_by_id": {"ex_0": 0.85, "ex_1": 0.85},
+                    "n_examples": 2,
+                },
+                f,
+            )
 
         # Current results: dropped to 0.70 from 0.85 (delta = -0.15 > -0.05 threshold)
         results = [
@@ -436,11 +444,14 @@ class TestRegressionGate:
         gate = RegressionGate()
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             baseline_path = f.name
-            json.dump({
-                "aggregate": 0.80,
-                "scores_by_id": {"ex_0": 0.80, "ex_1": 0.80},
-                "n_examples": 2,
-            }, f)
+            json.dump(
+                {
+                    "aggregate": 0.80,
+                    "scores_by_id": {"ex_0": 0.80, "ex_1": 0.80},
+                    "n_examples": 2,
+                },
+                f,
+            )
 
         # Current: 0.78, delta = -0.02, within tolerance
         results = [
@@ -456,15 +467,17 @@ class TestRegressionGate:
 # GROUP D: Integration (5 tests)
 # ─────────────────────────────────────────────────────────────
 
-class TestIntegration:
 
+class TestIntegration:
     def _make_judge_all_perfect(self) -> PRReviewJudge:
         """Judge that returns perfect scores for any input."""
-        mock_llm = _make_mock_llm({
-            "finding_coverage": 1.0,
-            "severity_accuracy": 1.0,
-            "reasoning": "Perfect",
-        })
+        mock_llm = _make_mock_llm(
+            {
+                "finding_coverage": 1.0,
+                "severity_accuracy": 1.0,
+                "reasoning": "Perfect",
+            }
+        )
         return PRReviewJudge(llm_client=mock_llm)
 
     def test_run_suite_returns_one_result_per_golden_example(self):
@@ -497,9 +510,27 @@ class TestIntegration:
         """
         gate = RegressionGate()
         results = [
-            _make_eval_result("a", score=0.80, difficulty="easy",   category="security",  expected_verdict="approve"),
-            _make_eval_result("b", score=0.75, difficulty="hard",   category="quality",   expected_verdict="request_changes"),
-            _make_eval_result("c", score=0.90, difficulty="medium", category="security",  expected_verdict="needs_human_review"),
+            _make_eval_result(
+                "a",
+                score=0.80,
+                difficulty="easy",
+                category="security",
+                expected_verdict="approve",
+            ),
+            _make_eval_result(
+                "b",
+                score=0.75,
+                difficulty="hard",
+                category="quality",
+                expected_verdict="request_changes",
+            ),
+            _make_eval_result(
+                "c",
+                score=0.90,
+                difficulty="medium",
+                category="security",
+                expected_verdict="needs_human_review",
+            ),
         ]
         slices = gate.compute_slice_metrics(results)
 
@@ -547,21 +578,36 @@ class TestIntegration:
         golden = [
             GoldenPR(
                 id="v_approve",
-                pr_title="", pr_description="", diff_snippet="",
+                pr_title="",
+                pr_description="",
+                diff_snippet="",
                 expected_verdict="approve",
-                expected_findings=(), difficulty="easy", category="quality", notes="",
+                expected_findings=(),
+                difficulty="easy",
+                category="quality",
+                notes="",
             ),
             GoldenPR(
                 id="v_changes",
-                pr_title="", pr_description="", diff_snippet="",
+                pr_title="",
+                pr_description="",
+                diff_snippet="",
                 expected_verdict="request_changes",
-                expected_findings=(), difficulty="medium", category="quality", notes="",
+                expected_findings=(),
+                difficulty="medium",
+                category="quality",
+                notes="",
             ),
             GoldenPR(
                 id="v_hitl",
-                pr_title="", pr_description="", diff_snippet="",
+                pr_title="",
+                pr_description="",
+                diff_snippet="",
                 expected_verdict="needs_human_review",
-                expected_findings=(), difficulty="hard", category="security", notes="",
+                expected_findings=(),
+                difficulty="hard",
+                category="security",
+                notes="",
             ),
         ]
 
@@ -586,7 +632,9 @@ class TestIntegration:
         judge = self._make_judge_all_perfect()
 
         # Pick only the empty-diff edge case
-        edge_examples = [ex for ex in load_golden_dataset() if ex.id == "edge_empty_diff"]
+        edge_examples = [
+            ex for ex in load_golden_dataset() if ex.id == "edge_empty_diff"
+        ]
         assert edge_examples, "edge_empty_diff not found in golden dataset"
 
         results = gate.run_suite(
@@ -606,6 +654,7 @@ class TestIntegration:
 
 if __name__ == "__main__":
     import subprocess
+
     result = subprocess.run(
         ["python3", "-m", "pytest", __file__, "-v", "--tb=short"],
         cwd=os.path.join(os.path.dirname(__file__), ".."),

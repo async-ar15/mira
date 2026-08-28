@@ -125,7 +125,7 @@ async def receive_github_webhook(
         validate_github_signature(
             payload_bytes=raw_body,
             signature_header=x_hub_signature_256,
-            secret=cfg.github_webhook_secret,   # pass the value, not the settings object
+            secret=cfg.github_webhook_secret,  # pass the value, not the settings object
         )
     except WebhookValidationError as e:
         logger.warning("Webhook signature validation failed: %s", str(e))
@@ -168,7 +168,7 @@ async def receive_github_webhook(
         event.repo_full_name,
         event.pr_number,
         event.action,
-        event.head_commit_sha[:8],   # log only first 8 chars of the SHA
+        event.head_commit_sha[:8],  # log only first 8 chars of the SHA
     )
 
     # ------------------------------------------------------------------
@@ -195,7 +195,9 @@ async def receive_github_webhook(
                 "base_branch": event.base_branch,
                 # Pass diff inline if the webhook payload contains it.
                 # Used as fallback when GitHub API is unavailable (local demo).
-                "pr_diff": event.pull_request.diff if hasattr(event.pull_request, "diff") else "",
+                "pr_diff": event.pull_request.diff
+                if hasattr(event.pull_request, "diff")
+                else "",
             },
         )
     except DuplicateWebhookError:
@@ -204,7 +206,10 @@ async def receive_github_webhook(
             event.idempotency_key,
         )
         return JSONResponse(
-            content={"status": "already_queued", "idempotency_key": event.idempotency_key},
+            content={
+                "status": "already_queued",
+                "idempotency_key": event.idempotency_key,
+            },
             status_code=status.HTTP_200_OK,
         )
     except MemoryStoreError as e:

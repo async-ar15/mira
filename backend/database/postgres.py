@@ -92,6 +92,7 @@ class Base(DeclarativeBase):
 # never imported speculatively at startup before settings are configured.
 # ---------------------------------------------------------------------------
 
+
 def _build_engine():
     """
     Builds the async SQLAlchemy engine from current settings.
@@ -109,22 +110,18 @@ def _build_engine():
 
     engine = create_async_engine(
         cfg.database_url,
-
         # Pool settings (from Storage-Engines.md wiki):
         # pool_size=5: 5 persistent connections. Enough for moderate concurrency.
         # max_overflow=10: burst to 15 total under load, then queue at pool_timeout.
         pool_size=5,
         max_overflow=10,
-
         # pool_timeout=30: wait up to 30s for a free connection.
         # Prevents requests piling up forever if the DB is overwhelmed.
         pool_timeout=30,
-
         # pool_recycle=1800: discard and recreate connections every 30 minutes.
         # Prevents "connection reset" errors from DB-side TCP keepalive timeouts.
         # (From Production-Hardening.md wiki: "stale connections cause silent failures")
         pool_recycle=1800,
-
         # pool_pre_ping=True: before handing a connection from the pool, issue
         # a "SELECT 1" ping. If the connection is dead (Neon closed it after
         # idle timeout), SQLAlchemy discards it and opens a fresh one.
@@ -133,7 +130,6 @@ def _build_engine():
         # on the first query after idle — exactly the error seen in Phase 14 demo.
         # Cost: one extra round-trip per acquired connection, negligible vs LLM latency.
         pool_pre_ping=True,
-
         # echo=False in production. echo=True would print every SQL statement
         # to logs — useful for debugging but too noisy for production.
         echo=False,
@@ -193,7 +189,7 @@ AsyncSessionLocal = async_sessionmaker(
     # To prevent import-time settings loading, we use a placeholder and rebuild
     # the factory on first call to get_db(). The factory itself is cheap to create.
     # See get_db() below which rebuilds the session if _engine is None.
-    bind=None,   # will be set on first get_db() call (lazy)
+    bind=None,  # will be set on first get_db() call (lazy)
     class_=AsyncSession,
     expire_on_commit=False,
 )
@@ -365,7 +361,9 @@ async def init_tiger_schema() -> None:
     cfg = get_settings()
     dsn = cfg.tiger_database_url or cfg.database_url
     # asyncpg wants plain postgresql:// not postgresql+asyncpg:// (that's SQLAlchemy syntax)
-    dsn = dsn.replace("postgresql+asyncpg://", "postgresql://").replace("postgres+asyncpg://", "postgresql://")
+    dsn = dsn.replace("postgresql+asyncpg://", "postgresql://").replace(
+        "postgres+asyncpg://", "postgresql://"
+    )
 
     # Build the pool with pgvector codec registered on every new connection.
     async def _init_conn(conn):
@@ -382,13 +380,16 @@ async def init_tiger_schema() -> None:
     # Run the idempotent migration SQL.
     migration_path = (
         pathlib.Path(__file__).resolve().parent.parent.parent
-        / "scripts" / "migrations" / "2026-06-tiger-init.sql"
+        / "scripts"
+        / "migrations"
+        / "2026-06-tiger-init.sql"
     )
     if migration_path.exists():
         sql = migration_path.read_text()
         # Split on semicolons, skip comments and blank statements.
         statements = [
-            s.strip() for s in re.split(r";\s*", sql)
+            s.strip()
+            for s in re.split(r";\s*", sql)
             if s.strip() and not s.strip().startswith("--")
         ]
         async with _tiger_pool.acquire() as conn:
@@ -399,13 +400,17 @@ async def init_tiger_schema() -> None:
                     logger.warning("Tiger migration stmt warning (non-fatal): %s", exc)
         logger.info("Tiger Cloud schema migration applied | path=%s", migration_path)
     else:
-        logger.warning("Tiger migration file not found at %s — skipping DDL", migration_path)
+        logger.warning(
+            "Tiger migration file not found at %s — skipping DDL", migration_path
+        )
 
     # Wire the singleton into tiger_client module so get_tiger_memory() works.
     try:
         from backend.memory import tiger_client as _tc
+
         if _tc.tiger_memory is None:
             from backend.memory.tiger_client import TigerMemoryClient
+
             _tc.tiger_memory = TigerMemoryClient(_tiger_pool)
             logger.info("TigerMemoryClient singleton initialized.")
     except Exception as exc:  # noqa: BLE001
@@ -415,4 +420,3 @@ async def init_tiger_schema() -> None:
         "Tiger Cloud pool ready | host=%s",
         dsn.split("@")[-1].split("/")[0] if "@" in dsn else "local",
     )
-

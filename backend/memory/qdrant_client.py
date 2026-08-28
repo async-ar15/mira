@@ -105,7 +105,7 @@ async def ensure_collection() -> bool:
     try:
         client = AsyncQdrantClient(
             url=cfg.qdrant_url,
-            api_key=cfg.qdrant_api_key or None,   # None if not set (local Qdrant)
+            api_key=cfg.qdrant_api_key or None,  # None if not set (local Qdrant)
             timeout=10,
         )
 
@@ -130,7 +130,8 @@ async def ensure_collection() -> bool:
 
         logger.info(
             "ensure_collection | created | name=%s dims=%d distance=COSINE",
-            COLLECTION_NAME, EMBEDDING_DIMENSIONS,
+            COLLECTION_NAME,
+            EMBEDDING_DIMENSIONS,
         )
 
         await client.close()
@@ -141,7 +142,8 @@ async def ensure_collection() -> bool:
         # (Production-Hardening.md: "log warning, do NOT raise on optional deps.")
         logger.warning(
             "ensure_collection | qdrant_unavailable | %s: %s",
-            type(e).__name__, e,
+            type(e).__name__,
+            e,
         )
         return False
 
@@ -198,7 +200,7 @@ async def upsert_code_chunks(
         client = AsyncQdrantClient(
             url=cfg.qdrant_url,
             api_key=cfg.qdrant_api_key or None,
-            timeout=30,   # longer timeout for batch upserts
+            timeout=30,  # longer timeout for batch upserts
         )
 
         # Build PointStruct list from file_chunks
@@ -219,24 +221,27 @@ async def upsert_code_chunks(
             point_id_str = f"{repo_full_name}:{pr_number}:{file_path}"
             point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, point_id_str))
 
-            points.append(PointStruct(
-                id=point_id,
-                vector=vector,
-                payload={
-                    # Metadata for filtering (RAG-Architecture.md: "metadata-first")
-                    "repo_full_name": repo_full_name,
-                    "pr_number": pr_number,
-                    # Provenance for citation grounding
-                    "file_path": file_path,
-                    # The actual text — needed to build the context string
-                    "chunk_text": text,
-                },
-            ))
+            points.append(
+                PointStruct(
+                    id=point_id,
+                    vector=vector,
+                    payload={
+                        # Metadata for filtering (RAG-Architecture.md: "metadata-first")
+                        "repo_full_name": repo_full_name,
+                        "pr_number": pr_number,
+                        # Provenance for citation grounding
+                        "file_path": file_path,
+                        # The actual text — needed to build the context string
+                        "chunk_text": text,
+                    },
+                )
+            )
 
         if not points:
             logger.debug(
                 "upsert_code_chunks | no_valid_chunks | repo=%s pr=%d",
-                repo_full_name, pr_number,
+                repo_full_name,
+                pr_number,
             )
             await client.close()
             return
@@ -249,7 +254,9 @@ async def upsert_code_chunks(
 
         logger.info(
             "upsert_code_chunks | success | repo=%s pr=%d chunks=%d",
-            repo_full_name, pr_number, len(points),
+            repo_full_name,
+            pr_number,
+            len(points),
         )
 
         await client.close()
@@ -259,7 +266,10 @@ async def upsert_code_chunks(
         # The review has already completed — Qdrant is for FUTURE context retrieval.
         logger.warning(
             "upsert_code_chunks | qdrant_error | repo=%s pr=%d error=%s: %s",
-            repo_full_name, pr_number, type(e).__name__, e,
+            repo_full_name,
+            pr_number,
+            type(e).__name__,
+            e,
         )
 
 
@@ -346,19 +356,23 @@ async def search_similar_code(
 
         logger.debug(
             "search_similar_code | repo=%s top_k=%d results=%d",
-            repo_full_name, top_k, len(hits),
+            repo_full_name,
+            top_k,
+            len(hits),
         )
 
         # Convert ScoredPoint objects to plain dicts for the caller
         results: list[dict[str, Any]] = []
         for hit in hits:
             payload = hit.payload or {}
-            results.append({
-                "file_path": payload.get("file_path", ""),
-                "chunk_text": payload.get("chunk_text", ""),
-                "score": round(float(hit.score), 4),
-                "pr_number": payload.get("pr_number"),
-            })
+            results.append(
+                {
+                    "file_path": payload.get("file_path", ""),
+                    "chunk_text": payload.get("chunk_text", ""),
+                    "score": round(float(hit.score), 4),
+                    "pr_number": payload.get("pr_number"),
+                }
+            )
 
         await client.close()
         return results
@@ -369,6 +383,8 @@ async def search_similar_code(
         #  context_retriever returns '' and the review still runs with diff only.")
         logger.warning(
             "search_similar_code | qdrant_error | repo=%s error=%s: %s",
-            repo_full_name, type(e).__name__, e,
+            repo_full_name,
+            type(e).__name__,
+            e,
         )
         return []

@@ -72,7 +72,7 @@ class TraceSpan:
     parent_span_id: str | None
     operation_name: str
     start_time: float  # time.monotonic() for duration; epoch stored separately
-    start_epoch: str   # ISO-8601 UTC -- human-readable in JSON exports
+    start_epoch: str  # ISO-8601 UTC -- human-readable in JSON exports
     end_time: float | None = field(default=None)
     duration_ms: float | None = field(default=None)
     # tags: structured metadata -- NOT logged during execution, exported at end

@@ -88,6 +88,7 @@ class CodeChunk:
     updated_at:  When this chunk was last embedded (for freshness decay)
     id:          UUID primary key (auto-generated if not provided)
     """
+
     repo: str
     path: str
     content: str
@@ -175,7 +176,9 @@ class TigerMemoryClient:
         )
         logger.info(
             "Tiger Cloud pool created | host=%s min=%d max=%d",
-            resolved_dsn.split("@")[-1].split("/")[0] if "@" in resolved_dsn else "local",
+            resolved_dsn.split("@")[-1].split("/")[0]
+            if "@" in resolved_dsn
+            else "local",
             min_size,
             max_size,
         )
@@ -220,15 +223,26 @@ class TigerMemoryClient:
         """
         rows = [
             (
-                c.id, c.repo, c.path, c.symbol, c.chunk_index,
-                c.content, c.embedding, c.token_count, c.updated_at,
+                c.id,
+                c.repo,
+                c.path,
+                c.symbol,
+                c.chunk_index,
+                c.content,
+                c.embedding,
+                c.token_count,
+                c.updated_at,
             )
             for c in chunks
         ]
         async with self._pool.acquire() as conn:
             await conn.executemany(sql, rows)
 
-        logger.debug("upsert_chunks | count=%d repo=%s", len(chunks), chunks[0].repo if chunks else "?")
+        logger.debug(
+            "upsert_chunks | count=%d repo=%s",
+            len(chunks),
+            chunks[0].repo if chunks else "?",
+        )
         return len(chunks)
 
     # -------------------------------------------------------------------------
@@ -296,7 +310,8 @@ class TigerMemoryClient:
         """
         decay_expr = (
             "* EXP(-EXTRACT(EPOCH FROM (now() - updated_at)) / 3600.0 / 168.0)"
-            if freshness_decay else ""
+            if freshness_decay
+            else ""
         )
         sql = f"""
             SELECT
@@ -336,7 +351,8 @@ class TigerMemoryClient:
 
         decay_expr = (
             "* EXP(-EXTRACT(EPOCH FROM (now() - c.updated_at)) / 3600.0 / 168.0)"
-            if freshness_decay else ""
+            if freshness_decay
+            else ""
         )
 
         sql = f"""
@@ -427,7 +443,9 @@ class TigerMemoryClient:
             result = await conn.execute(sql, *params)
 
         deleted = int(result.split()[-1]) if result else 0
-        logger.info("delete_stale_chunks | repo=%s path=%s deleted=%d", repo, path, deleted)
+        logger.info(
+            "delete_stale_chunks | repo=%s path=%s deleted=%d", repo, path, deleted
+        )
         return deleted
 
     # -------------------------------------------------------------------------
@@ -503,7 +521,15 @@ class TigerMemoryClient:
             symbol=row["symbol"],
             chunk_index=row["chunk_index"],
             content=row["content"],
-            embedding=row["embedding"].to_list() if hasattr(row["embedding"], "to_list") else (row["embedding"].tolist() if hasattr(row["embedding"], "tolist") else list(row["embedding"])) if row["embedding"] is not None else [],
+            embedding=row["embedding"].to_list()
+            if hasattr(row["embedding"], "to_list")
+            else (
+                row["embedding"].tolist()
+                if hasattr(row["embedding"], "tolist")
+                else list(row["embedding"])
+            )
+            if row["embedding"] is not None
+            else [],
             token_count=row["token_count"],
             updated_at=row["updated_at"],
         )

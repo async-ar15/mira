@@ -35,6 +35,7 @@ from backend.prompts.registry import PromptRegistry
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def fresh_registry() -> PromptRegistry:
     """Returns a fresh PromptRegistry instance with an empty cache for isolation."""
     r = PromptRegistry()
@@ -46,6 +47,7 @@ def fresh_registry() -> PromptRegistry:
 # Test 1-4: Basic load per agent type
 # ---------------------------------------------------------------------------
 
+
 def test_load_security_v1():
     """security/v1.txt must load and contain the OWASP header."""
     r = fresh_registry()
@@ -55,6 +57,7 @@ def test_load_security_v1():
         "Security prompt should mention injection or OWASP"
     )
 
+
 def test_load_quality_v1():
     """quality/v1.txt must load and contain SOLID reference."""
     r = fresh_registry()
@@ -62,12 +65,14 @@ def test_load_quality_v1():
     assert len(content) > 100
     assert "SOLID" in content, "Quality prompt should mention SOLID"
 
+
 def test_load_test_v1():
     """test/v1.txt must load and contain assertion reference."""
     r = fresh_registry()
     content = r.load_prompt(AgentType.TEST, "v1")
     assert len(content) > 100
     assert "assert" in content.lower(), "Test prompt should mention assertions"
+
 
 def test_load_docs_v1():
     """docs/v1.txt must load and contain docstring reference."""
@@ -80,6 +85,7 @@ def test_load_docs_v1():
 # ---------------------------------------------------------------------------
 # Test 5: "latest" resolves to v1 (only one version exists right now)
 # ---------------------------------------------------------------------------
+
 
 def test_latest_resolves_to_v1_for_security():
     """
@@ -99,6 +105,7 @@ def test_latest_resolves_to_v1_for_security():
 # Test 6: Missing version raises PromptNotFoundError
 # ---------------------------------------------------------------------------
 
+
 def test_missing_version_raises():
     """
     Requesting a version that doesn't exist on disk must raise PromptNotFoundError.
@@ -115,6 +122,7 @@ def test_missing_version_raises():
 # ---------------------------------------------------------------------------
 # Test 7: Unknown/missing agent directory raises PromptNotFoundError
 # ---------------------------------------------------------------------------
+
 
 def test_missing_agent_directory_raises():
     """
@@ -135,6 +143,7 @@ def test_missing_agent_directory_raises():
 # Test 8: Cache returns same object on second call (no re-read from disk)
 # ---------------------------------------------------------------------------
 
+
 def test_cache_hit_on_second_call(caplog):
     """
     Second call with the same (agent, version) must hit the cache.
@@ -149,14 +158,15 @@ def test_cache_hit_on_second_call(caplog):
     assert content1 == content2
     # 'prompt_loaded' appears exactly once — the second call hits cache
     loaded_msgs = [r for r in caplog.records if "prompt_loaded" in r.message]
-    cache_msgs  = [r for r in caplog.records if "prompt_cache_hit" in r.message]
+    cache_msgs = [r for r in caplog.records if "prompt_cache_hit" in r.message]
     assert len(loaded_msgs) == 1, "Should load from disk exactly once"
-    assert len(cache_msgs)  == 1, "Second call should be a cache hit"
+    assert len(cache_msgs) == 1, "Second call should be a cache hit"
 
 
 # ---------------------------------------------------------------------------
 # Test 9: list_versions() returns sorted list
 # ---------------------------------------------------------------------------
+
 
 def test_list_versions_returns_sorted():
     """
@@ -164,7 +174,12 @@ def test_list_versions_returns_sorted():
     Right now each agent has exactly one version: ["v1"].
     """
     r = fresh_registry()
-    for agent_type in [AgentType.SECURITY, AgentType.QUALITY, AgentType.TEST, AgentType.DOCS]:
+    for agent_type in [
+        AgentType.SECURITY,
+        AgentType.QUALITY,
+        AgentType.TEST,
+        AgentType.DOCS,
+    ]:
         versions = r.list_versions(agent_type)
         assert versions == ["v1"], (
             f"{agent_type.value} should have exactly ['v1'], got {versions}"
@@ -174,6 +189,7 @@ def test_list_versions_returns_sorted():
 # ---------------------------------------------------------------------------
 # Test 10: Prompt content matches template file content exactly
 # ---------------------------------------------------------------------------
+
 
 def test_prompt_content_matches_template_file():
     """
@@ -192,6 +208,7 @@ def test_prompt_content_matches_template_file():
 # ---------------------------------------------------------------------------
 # Test 11: BaseAgent._get_prompt_with_fallback() uses registry as primary
 # ---------------------------------------------------------------------------
+
 
 def test_base_agent_uses_registry_as_primary():
     """
@@ -220,6 +237,7 @@ def test_base_agent_uses_registry_as_primary():
 # Test 12: _get_prompt_with_fallback() falls back to _system_prompt() on error
 # ---------------------------------------------------------------------------
 
+
 def test_base_agent_falls_back_when_registry_fails(caplog):
     """
     When the registry raises PromptNotFoundError, _get_prompt_with_fallback()
@@ -237,7 +255,9 @@ def test_base_agent_falls_back_when_registry_fails(caplog):
             content = agent._get_prompt_with_fallback("security")
 
     # The fallback must return something (not empty)
-    assert len(content) > 50, "Fallback _system_prompt() should return non-empty content"
+    assert len(content) > 50, (
+        "Fallback _system_prompt() should return non-empty content"
+    )
     # Must have logged a WARNING
     warnings = [r for r in caplog.records if "prompt_registry_miss" in r.message]
     assert len(warnings) >= 1, "Should log a warning when falling back"

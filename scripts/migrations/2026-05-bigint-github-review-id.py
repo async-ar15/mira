@@ -1,10 +1,11 @@
 """One-shot ALTER: github_review_id INT -> BIGINT on reviews table."""
+
 import asyncio
 import re
 from pathlib import Path
 
 env = Path(".env").read_text()
-m = re.search(r'^DATABASE_URL=(.+)$', env, re.MULTILINE)
+m = re.search(r"^DATABASE_URL=(.+)$", env, re.MULTILINE)
 url = m.group(1).strip().strip('"').strip("'")
 
 import asyncpg
@@ -23,7 +24,7 @@ async def main():
         print("Before:", dict(r))
     for r in rows:
         if r["data_type"] == "integer":
-            sql = f'ALTER TABLE {r["table_name"]} ALTER COLUMN github_review_id TYPE BIGINT;'
+            sql = f"ALTER TABLE {r['table_name']} ALTER COLUMN github_review_id TYPE BIGINT;"
             print("Running:", sql)
             await conn.execute(sql)
     rows2 = await conn.fetch("""
@@ -33,5 +34,6 @@ async def main():
     for r in rows2:
         print("After:", dict(r))
     await conn.close()
+
 
 asyncio.run(main())

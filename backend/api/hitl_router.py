@@ -56,8 +56,10 @@ hitl_router = APIRouter(prefix="/api/v1/hitl", tags=["hitl"])
 # (Clean-Architecture: "Request/response models must be independent of use cases.")
 # ---------------------------------------------------------------------------
 
+
 class HITLDecisionRequest(BaseModel):
     """Body for POST /api/v1/hitl/{id}/decision."""
+
     human_verdict: str = Field(
         ...,
         description="Reviewer's verdict: 'approve', 'request_changes', or 'dismiss'.",
@@ -74,6 +76,7 @@ class HITLDecisionRequest(BaseModel):
 
 class HITLItemResponse(BaseModel):
     """Response DTO for a single HITL queue item."""
+
     id: str
     review_id: str
     repo_full_name: str
@@ -107,6 +110,7 @@ class HITLItemResponse(BaseModel):
 
 class HITLDecisionResponse(BaseModel):
     """Response DTO for POST /api/v1/hitl/{id}/decision."""
+
     hitl_review_id: str
     previous_status: str
     new_status: str
@@ -117,6 +121,7 @@ class HITLDecisionResponse(BaseModel):
 
 class HITLQueueResponse(BaseModel):
     """Response DTO for GET /api/v1/hitl/queue."""
+
     items: list[HITLItemResponse]
     total: int
     limit: int
@@ -185,6 +190,7 @@ async def get_hitl_item(
         )
 
     import json as _json
+
     findings = []
     if row.findings_snapshot:
         try:
@@ -269,7 +275,9 @@ async def submit_decision(
 
     logger.info(
         "hitl_router | decision_submitted | hitl_id=%s verdict=%s reviewer=%s",
-        hitl_id, body.human_verdict, body.reviewer_id,
+        hitl_id,
+        body.human_verdict,
+        body.reviewer_id,
     )
 
     return HITLDecisionResponse(

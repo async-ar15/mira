@@ -90,8 +90,8 @@ class RedisClient:
                 encoding="utf-8",
                 decode_responses=True,
                 # Connection pool settings:
-                max_connections=20,     # max 20 concurrent Redis connections
-                socket_timeout=5.0,     # fail after 5s if Redis doesn't respond
+                max_connections=20,  # max 20 concurrent Redis connections
+                socket_timeout=5.0,  # fail after 5s if Redis doesn't respond
                 socket_connect_timeout=5.0,
                 retry_on_timeout=True,  # auto-retry once on timeout
             )
@@ -290,13 +290,16 @@ class RedisClient:
             await pool.setex(redis_key, ttl, status)
             logger.debug(
                 "cache_review_status | review_id=%s status=%s ttl=%ds",
-                review_id, status, ttl,
+                review_id,
+                status,
+                ttl,
             )
         except Exception as e:
             # Best-effort: log and continue (do not fail the review on cache miss)
             logger.warning(
                 "cache_review_status | failed | review_id=%s error=%s",
-                review_id, str(e),
+                review_id,
+                str(e),
             )
 
     async def get_cached_review_status(self, review_id: str) -> str | None:
@@ -320,13 +323,15 @@ class RedisClient:
             value = await pool.get(redis_key)
             logger.debug(
                 "get_cached_review_status | review_id=%s cache_%s",
-                review_id, "hit" if value else "miss",
+                review_id,
+                "hit" if value else "miss",
             )
             return value
         except Exception as e:
             logger.warning(
                 "get_cached_review_status | failed | review_id=%s error=%s",
-                review_id, str(e),
+                review_id,
+                str(e),
             )
             return None
 

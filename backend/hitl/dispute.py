@@ -53,6 +53,7 @@ class HITLReviewNotFound(Exception):
 
 class DisputeAlreadyResolved(Exception):
     """Raised when two concurrent reviewers try to resolve the same item."""
+
     def __init__(self, current_status: str):
         self.current_status = current_status
         super().__init__(f"Review already in status '{current_status}'.")
@@ -75,21 +76,23 @@ VALID_HUMAN_VERDICTS = frozenset({"approve", "request_changes", "dismiss"})
 @dataclass
 class DisputeRequest:
     """Input to resolve_dispute(). All fields plain Python primitives."""
+
     hitl_review_id: str
-    human_verdict: str          # "approve" / "request_changes" / "dismiss"
-    reason: str                 # required on override, optional on confirmation
-    reviewer_id: str            # GitHub handle, email, or system identifier
+    human_verdict: str  # "approve" / "request_changes" / "dismiss"
+    reason: str  # required on override, optional on confirmation
+    reviewer_id: str  # GitHub handle, email, or system identifier
 
 
 @dataclass
 class DisputeResult:
     """Output of resolve_dispute()."""
+
     hitl_review_id: str
     previous_status: str
     new_status: str
     human_verdict: str
     posted_to_github: bool
-    feedback_id: str            # UUID of the HITLFeedback row created
+    feedback_id: str  # UUID of the HITLFeedback row created
 
 
 # ---------------------------------------------------------------------------
@@ -110,9 +113,9 @@ class DisputeResult:
 async def resolve_dispute(
     session: AsyncSession,
     *,
-    github_client,      # backend.github.client.GitHubClient — type-hint avoided
-                        # to prevent circular import. Duck-typed: must have
-                        # post_review(repo, pr_number, verdict, body) method.
+    github_client,  # backend.github.client.GitHubClient — type-hint avoided
+    # to prevent circular import. Duck-typed: must have
+    # post_review(repo, pr_number, verdict, body) method.
     request: DisputeRequest,
 ) -> DisputeResult:
     """
@@ -176,7 +179,7 @@ async def resolve_dispute(
         # Step 4: Apply new status + human verdict.
         status_map = {
             "approve": "approved",
-            "request_changes": "rejected",   # rejected = agent was right to flag
+            "request_changes": "rejected",  # rejected = agent was right to flag
             "dismiss": "dismissed",
         }
         new_status = status_map[request.human_verdict]
@@ -198,8 +201,11 @@ async def resolve_dispute(
     logger.info(
         "hitl_dispute | resolved | hitl_id=%s status=%s->%s "
         "human_verdict=%s reviewer=%s",
-        request.hitl_review_id, previous_status, new_status,
-        request.human_verdict, request.reviewer_id,
+        request.hitl_review_id,
+        previous_status,
+        new_status,
+        request.human_verdict,
+        request.reviewer_id,
     )
 
     # Step 6: Record feedback (Phase 20 training signal).
@@ -211,7 +217,7 @@ async def resolve_dispute(
         agent_verdict=hitl_review.agent_verdict,
         human_verdict=request.human_verdict,
         reason=request.reason,
-        context_snapshot=hitl_review.findings_snapshot,   # already JSON
+        context_snapshot=hitl_review.findings_snapshot,  # already JSON
     )
 
     # Step 7: Post to GitHub (best-effort).
@@ -256,7 +262,7 @@ async def resolve_dispute(
             commit_id=commit_id,
             body=body,
             event=github_event,
-            comments=[],   # no inline comments (Phase 17 restores those)
+            comments=[],  # no inline comments (Phase 17 restores those)
         )
 
         await github_client.post_pr_review(
@@ -267,6 +273,7 @@ async def resolve_dispute(
 
         # Mark posted in DB (non-atomic update — best effort).
         from backend.database.postgres import get_session_factory as _sf
+
         async with _sf()() as update_session, update_session.begin():
             r2 = await update_session.execute(
                 select(HITLReview).where(HITLReview.id == request.hitl_review_id)
@@ -278,13 +285,16 @@ async def resolve_dispute(
         posted = True
         logger.info(
             "hitl_dispute | posted_to_github | hitl_id=%s pr=%d event=%s",
-            request.hitl_review_id, hitl_review.pr_number, github_event_str,
+            request.hitl_review_id,
+            hitl_review.pr_number,
+            github_event_str,
         )
     except Exception as gh_err:
         logger.warning(
             "hitl_dispute | github_post_failed | hitl_id=%s error=%s | "
             "verdict committed to DB, retry available",
-            request.hitl_review_id, gh_err,
+            request.hitl_review_id,
+            gh_err,
         )
 
     return DisputeResult(
@@ -300,6 +310,7 @@ async def resolve_dispute(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _human_verdict_to_github_event(human_verdict: str) -> str:
     """
@@ -318,7 +329,7 @@ def _human_verdict_to_github_event(human_verdict: str) -> str:
     # The DB still records the true human_verdict; only the GitHub-visible
     # event is downgraded to COMMENT to avoid 422.
     mapping = {
-        "approve": "COMMENT",          # COMMENT until dedicated bot account
+        "approve": "COMMENT",  # COMMENT until dedicated bot account
         "request_changes": "COMMENT",  # COMMENT until dedicated bot account
         "dismiss": "COMMENT",
     }

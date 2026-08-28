@@ -89,6 +89,7 @@ logger = logging.getLogger(__name__)
 #       # Something else went wrong. Log it, mark review as FAILED.
 # =============================================================================
 
+
 class GitHubAPIError(Exception):
     """
     Base exception for all GitHub API errors.
@@ -97,7 +98,9 @@ class GitHubAPIError(Exception):
     to avoid flooding logs with large GitHub error HTML pages).
     """
 
-    def __init__(self, message: str, status_code: int = 0, response_body: str = "") -> None:
+    def __init__(
+        self, message: str, status_code: int = 0, response_body: str = ""
+    ) -> None:
         super().__init__(message)
         self.status_code = status_code
         # Truncate long GitHub HTML error pages (e.g., 502 Bad Gateway pages)
@@ -173,10 +176,10 @@ class GitHubRateLimitError(GitHubAPIError):
 # =============================================================================
 
 _TIMEOUT = httpx.Timeout(
-    connect=5.0,   # TCP handshake: 5s is generous for api.github.com
-    read=30.0,     # Reading diffs: 30s handles even 10MB diffs
-    write=10.0,    # Posting review payloads (inline comments)
-    pool=5.0,      # Waiting for a connection from the pool
+    connect=5.0,  # TCP handshake: 5s is generous for api.github.com
+    read=30.0,  # Reading diffs: 30s handles even 10MB diffs
+    write=10.0,  # Posting review payloads (inline comments)
+    pool=5.0,  # Waiting for a connection from the pool
 )
 
 # =============================================================================

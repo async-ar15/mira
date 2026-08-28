@@ -129,7 +129,10 @@ async def enqueue_hitl_review(
 
     logger.info(
         "hitl_queue | enqueued_to_postgres | hitl_id=%s review_id=%s repo=%s pr=%d",
-        hitl_review_id, review_id, repo_full_name, pr_number,
+        hitl_review_id,
+        review_id,
+        repo_full_name,
+        pr_number,
     )
 
     # --- Step 2: Redis (derived, ephemeral) ---
@@ -140,7 +143,8 @@ async def enqueue_hitl_review(
         await redis_client.lpush(REDIS_QUEUE_KEY, hitl_review_id)
         logger.info(
             "hitl_queue | pushed_to_redis | hitl_id=%s key=%s",
-            hitl_review_id, REDIS_QUEUE_KEY,
+            hitl_review_id,
+            REDIS_QUEUE_KEY,
         )
     except Exception as redis_err:
         # Non-fatal: the item is persisted in Postgres. The GET /hitl/queue
@@ -148,7 +152,8 @@ async def enqueue_hitl_review(
         logger.warning(
             "hitl_queue | redis_push_failed | hitl_id=%s error=%s | "
             "item safe in postgres, queue degraded",
-            hitl_review_id, redis_err,
+            hitl_review_id,
+            redis_err,
         )
 
     # --- Step 3: Slack notification (best-effort) ---
@@ -197,7 +202,7 @@ async def get_pending_queue(
     stmt = (
         select(HITLReview)
         .where(HITLReview.status.in_(["pending", "in_review"]))
-        .order_by(HITLReview.created_at.asc())   # oldest first = FIFO queue semantics
+        .order_by(HITLReview.created_at.asc())  # oldest first = FIFO queue semantics
         .limit(limit)
         .offset(offset)
     )
@@ -338,11 +343,14 @@ async def _notify_slack(
             else:
                 logger.warning(
                     "hitl_queue | slack_notify_failed | hitl_id=%s status=%d body=%s",
-                    hitl_review_id, resp.status_code, resp.text[:200],
+                    hitl_review_id,
+                    resp.status_code,
+                    resp.text[:200],
                 )
     except Exception as err:
         # Non-fatal. The item is already in Postgres.
         logger.warning(
             "hitl_queue | slack_notify_exception | hitl_id=%s error=%s",
-            hitl_review_id, err,
+            hitl_review_id,
+            err,
         )

@@ -54,9 +54,10 @@ class EscalationResult:
     rule_triggered:  which rule fired (for logging + HITL row).
     reason:          human-readable explanation (stored on HITLReview row).
     """
+
     should_escalate: bool
-    rule_triggered: str   # "none", "rule1_security_failure", "rule2_critical_threshold",
-                          #  "rule3_low_confidence", "rule4_insufficient_agents"
+    rule_triggered: str  # "none", "rule1_security_failure", "rule2_critical_threshold",
+    #  "rule3_low_confidence", "rule4_insufficient_agents"
     reason: str
 
 
@@ -64,9 +65,9 @@ class EscalationResult:
 # Escalation thresholds (module-level constants so they can be overridden
 # in tests without monkey-patching buried logic)
 # ---------------------------------------------------------------------------
-CRITICAL_AGENT_THRESHOLD = 2   # rule2: 2+ agents CRITICAL -> HITL
-CONFIDENCE_THRESHOLD = 0.40    # rule3: confidence < 0.40  -> HITL
-MIN_SUCCESSFUL_AGENTS = 2      # rule4: <2 successful       -> HITL
+CRITICAL_AGENT_THRESHOLD = 2  # rule2: 2+ agents CRITICAL -> HITL
+CONFIDENCE_THRESHOLD = 0.40  # rule3: confidence < 0.40  -> HITL
+MIN_SUCCESSFUL_AGENTS = 2  # rule4: <2 successful       -> HITL
 
 
 def should_escalate(
@@ -129,7 +130,8 @@ def should_escalate(
         logger.info(
             "hitl_escalation | rule=rule4_insufficient_agents | "
             "successful=%d total=%d | escalating",
-            successful_agent_count, total_agent_count,
+            successful_agent_count,
+            total_agent_count,
         )
         return EscalationResult(
             should_escalate=True,
@@ -151,7 +153,8 @@ def should_escalate(
         logger.info(
             "hitl_escalation | rule=rule2_critical_threshold | "
             "critical_count=%d threshold=%d | escalating",
-            critical_agent_count, CRITICAL_AGENT_THRESHOLD,
+            critical_agent_count,
+            CRITICAL_AGENT_THRESHOLD,
         )
         return EscalationResult(
             should_escalate=True,
@@ -171,7 +174,8 @@ def should_escalate(
         logger.info(
             "hitl_escalation | rule=rule3_low_confidence | "
             "confidence=%.2f threshold=%.2f | escalating",
-            overall_confidence, CONFIDENCE_THRESHOLD,
+            overall_confidence,
+            CONFIDENCE_THRESHOLD,
         )
         return EscalationResult(
             should_escalate=True,
@@ -183,8 +187,10 @@ def should_escalate(
     logger.debug(
         "hitl_escalation | no_escalation | "
         "security_ok=True critical=%d confidence=%.2f agents=%d/%d",
-        critical_agent_count, overall_confidence,
-        successful_agent_count, total_agent_count,
+        critical_agent_count,
+        overall_confidence,
+        successful_agent_count,
+        total_agent_count,
     )
     return EscalationResult(
         should_escalate=False,

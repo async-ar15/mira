@@ -46,6 +46,7 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class ToolSchema:
     """
@@ -64,6 +65,7 @@ class ToolSchema:
                        "required" is supported right now (sufficient for all Phase 7 tools)
         output_description — what the handler returns (helps agents interpret results)
     """
+
     name: str
     description: str
     input_schema: dict[str, Any]
@@ -85,6 +87,7 @@ class ToolDefinition:
         - return is always a dict (never a raw scalar, so callers have a
           consistent shape to deserialize)
     """
+
     schema: ToolSchema
     handler: Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -92,6 +95,7 @@ class ToolDefinition:
 # ---------------------------------------------------------------------------
 # Registry class
 # ---------------------------------------------------------------------------
+
 
 class ToolRegistry:
     """
@@ -189,9 +193,7 @@ class ToolRegistry:
         tool_def = self.get(name)  # raises KeyError if unknown
 
         # Validate required arguments are present
-        required_fields: list[str] = (
-            tool_def.schema.input_schema.get("required", [])
-        )
+        required_fields: list[str] = tool_def.schema.input_schema.get("required", [])
         missing = [f for f in required_fields if f not in args]
         if missing:
             raise ValueError(
@@ -238,23 +240,23 @@ _SECRET_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     (
         "generic_assignment",
         re.compile(
-            r'(?i)(password|passwd|secret|api_?key|auth_?token|access_?token|private_?key)'
+            r"(?i)(password|passwd|secret|api_?key|auth_?token|access_?token|private_?key)"
             r'\s*[=:]\s*["\']([^"\']{4,})["\']',
             re.MULTILINE,
         ),
     ),
     (
         "aws_access_key",
-        re.compile(r'AKIA[0-9A-Z]{16}', re.MULTILINE),
+        re.compile(r"AKIA[0-9A-Z]{16}", re.MULTILINE),
     ),
     (
         "pem_private_key",
-        re.compile(r'-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----', re.MULTILINE),
+        re.compile(r"-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----", re.MULTILINE),
     ),
     (
         "connection_string_with_password",
         re.compile(
-            r'[a-zA-Z+]+://[^:@\s]+:[^@\s]{4,}@[^\s]+',
+            r"[a-zA-Z+]+://[^:@\s]+:[^@\s]{4,}@[^\s]+",
             re.MULTILINE,
         ),
     ),
@@ -285,11 +287,13 @@ def _check_secrets_pattern_handler(args: dict[str, Any]) -> dict[str, Any]:
             for m in pattern.finditer(line):
                 # Redact: show only first 20 chars of the matched string
                 preview = m.group(0)[:20] + ("..." if len(m.group(0)) > 20 else "")
-                matches.append({
-                    "pattern_name": pattern_name,
-                    "match_preview": preview,
-                    "line": line_no,
-                })
+                matches.append(
+                    {
+                        "pattern_name": pattern_name,
+                        "match_preview": preview,
+                        "line": line_no,
+                    }
+                )
 
     return {
         "found": len(matches) > 0,
@@ -339,6 +343,7 @@ _TOOL_CHECK_SECRETS = ToolDefinition(
 #   This tool is a thin wrapper that delegates to the Sandbox class.
 #   We import sandbox here (not at module top) to keep the dependency explicit.
 # ---------------------------------------------------------------------------
+
 
 def _run_syntax_check_handler(args: dict[str, Any]) -> dict[str, Any]:
     """
@@ -425,6 +430,7 @@ _TOOL_RUN_SYNTAX_CHECK = ToolDefinition(
 #   DocsAgent:    "How is similar code documented elsewhere?"
 # ---------------------------------------------------------------------------
 
+
 def _search_similar_findings_handler(args: dict[str, Any]) -> dict[str, Any]:
     """
     Search Qdrant for code chunks or findings similar to the query string.
@@ -450,7 +456,9 @@ def _search_similar_findings_handler(args: dict[str, Any]) -> dict[str, Any]:
         # chunks = await get_tiger_memory().search(query_embedding, repo=repo, hybrid=True, query_text=query_text, top_k=5)
 
         embedding = embed_text(query)
-        raw_results = get_tiger_memory().search(embedding, hybrid=True, query_text=query, top_k=limit)
+        raw_results = get_tiger_memory().search(
+            embedding, hybrid=True, query_text=query, top_k=limit
+        )
 
         results = [
             {
@@ -526,6 +534,7 @@ _TOOL_SEARCH_SIMILAR = ToolDefinition(
 #   unambiguous intent signals." Registering a real schema for a stubbed tool
 #   means the schema is defined and stable. Phase 14 replaces only the handler.
 # ---------------------------------------------------------------------------
+
 
 def _get_dependency_advisory_handler(args: dict[str, Any]) -> dict[str, Any]:
     """

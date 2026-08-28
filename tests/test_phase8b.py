@@ -32,7 +32,10 @@ import pytest
 # Fixtures and helpers
 # =============================================================================
 
-def _make_finding_dict(severity: str, category: str = "security", summary: str = "test") -> dict:
+
+def _make_finding_dict(
+    severity: str, category: str = "security", summary: str = "test"
+) -> dict:
     """Creates a minimal finding dict (the shape stored in state)."""
     return {
         "severity": severity,
@@ -102,6 +105,7 @@ def _make_state(agent_results: list) -> dict:
 # Test 1: AgentTask construction and basic field access
 # =============================================================================
 
+
 def test_agent_task_construction():
     """AgentTask can be built from all fields. Fields are accessible."""
     from backend.agents.contracts import AgentTask
@@ -127,6 +131,7 @@ def test_agent_task_construction():
 # Test 2: AgentTask is immutable (frozen=True)
 # =============================================================================
 
+
 def test_agent_task_is_frozen():
     """AgentTask fields cannot be mutated — frozen dataclass."""
     from backend.agents.contracts import AgentTask
@@ -145,6 +150,7 @@ def test_agent_task_is_frozen():
 # =============================================================================
 # Test 3: AgentTask defaults
 # =============================================================================
+
 
 def test_agent_task_defaults():
     """AgentTask has sensible defaults for optional fields."""
@@ -166,6 +172,7 @@ def test_agent_task_defaults():
 # Test 4: AgentVerdict enum values
 # =============================================================================
 
+
 def test_agent_verdict_values():
     """AgentVerdict has the three expected string values."""
     from backend.agents.contracts import AgentVerdict
@@ -178,6 +185,7 @@ def test_agent_verdict_values():
 # =============================================================================
 # Test 5: PeerFindingSummary construction
 # =============================================================================
+
 
 def test_peer_finding_summary():
     """PeerFindingSummary is frozen and stores the expected fields."""
@@ -202,6 +210,7 @@ def test_peer_finding_summary():
 # =============================================================================
 # Test 6: VerdictRecord.to_dict() serialization
 # =============================================================================
+
 
 def test_verdict_record_to_dict():
     """VerdictRecord.to_dict() returns plain strings (no enum objects)."""
@@ -231,6 +240,7 @@ def test_verdict_record_to_dict():
 # Test 7: _derive_per_agent_verdict — CRITICAL finding -> CRITICAL_BLOCK
 # =============================================================================
 
+
 def test_derive_verdict_critical():
     """A CRITICAL finding -> CRITICAL_BLOCK verdict."""
     from backend.agents.contracts import AgentVerdict
@@ -259,6 +269,7 @@ def test_derive_verdict_critical():
 # Test 8: _derive_per_agent_verdict — HIGH finding -> REQUEST_CHANGES
 # =============================================================================
 
+
 def test_derive_verdict_high():
     """A HIGH finding (no CRITICAL) -> REQUEST_CHANGES verdict."""
     from backend.agents.contracts import AgentVerdict
@@ -286,6 +297,7 @@ def test_derive_verdict_high():
 # =============================================================================
 # Test 9: _derive_per_agent_verdict — only MEDIUM/LOW -> APPROVE
 # =============================================================================
+
 
 def test_derive_verdict_approve():
     """Only MEDIUM/LOW findings -> APPROVE verdict (no blockers)."""
@@ -328,6 +340,7 @@ def test_derive_verdict_approve():
 # Test 10: _derive_per_agent_verdict — empty findings -> APPROVE
 # =============================================================================
 
+
 def test_derive_verdict_no_findings():
     """Empty findings list -> APPROVE (nothing found)."""
     from backend.agents.contracts import AgentVerdict
@@ -342,6 +355,7 @@ def test_derive_verdict_no_findings():
 # Test 11: Safety-Threshold Rule — 1 CRITICAL_BLOCK agent -> REQUEST_CHANGES
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_safety_threshold_one_critical_block():
     """
@@ -354,7 +368,8 @@ async def test_safety_threshold_one_critical_block():
 
     # Security agent: CRITICAL_BLOCK verdict, has a critical finding
     security = _make_agent_result(
-        "security", success=True,
+        "security",
+        success=True,
         findings=[_make_finding_dict("critical")],
         confidence=0.9,
         per_verdict="critical_block",
@@ -362,7 +377,7 @@ async def test_safety_threshold_one_critical_block():
     # Other 3 agents: clean
     quality = _make_agent_result("quality", per_verdict="approve", confidence=0.85)
     test_ag = _make_agent_result("test", per_verdict="approve", confidence=0.85)
-    docs    = _make_agent_result("docs", per_verdict="approve", confidence=0.85)
+    docs = _make_agent_result("docs", per_verdict="approve", confidence=0.85)
 
     state = _make_state([security, quality, test_ag, docs])
 
@@ -379,6 +394,7 @@ async def test_safety_threshold_one_critical_block():
 # Test 12: Safety-Threshold Rule — 2 CRITICAL_BLOCK agents -> HITL
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_safety_threshold_two_critical_blocks():
     """
@@ -389,17 +405,21 @@ async def test_safety_threshold_two_critical_blocks():
     from backend.orchestrator.nodes import aggregate_results
 
     security = _make_agent_result(
-        "security", success=True,
+        "security",
+        success=True,
         findings=[_make_finding_dict("critical")],
-        confidence=0.9, per_verdict="critical_block",
+        confidence=0.9,
+        per_verdict="critical_block",
     )
     quality = _make_agent_result(
-        "quality", success=True,
+        "quality",
+        success=True,
         findings=[_make_finding_dict("critical", category="quality")],
-        confidence=0.88, per_verdict="critical_block",
+        confidence=0.88,
+        per_verdict="critical_block",
     )
     test_ag = _make_agent_result("test", per_verdict="approve", confidence=0.85)
-    docs    = _make_agent_result("docs", per_verdict="approve", confidence=0.85)
+    docs = _make_agent_result("docs", per_verdict="approve", confidence=0.85)
 
     state = _make_state([security, quality, test_ag, docs])
 
@@ -414,6 +434,7 @@ async def test_safety_threshold_two_critical_blocks():
 # =============================================================================
 # Test 13: verdict_breakdown always emitted
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_verdict_breakdown_always_emitted():
@@ -449,6 +470,7 @@ async def test_verdict_breakdown_always_emitted():
 # Test 14: conflict_detected flag — agents disagree
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_conflict_detected_when_agents_disagree():
     """
@@ -458,8 +480,12 @@ async def test_conflict_detected_when_agents_disagree():
     from backend.orchestrator.nodes import aggregate_results
 
     results = [
-        _make_agent_result("security", per_verdict="request_changes", confidence=0.88,
-                           findings=[_make_finding_dict("high")]),
+        _make_agent_result(
+            "security",
+            per_verdict="request_changes",
+            confidence=0.88,
+            findings=[_make_finding_dict("high")],
+        ),
         _make_agent_result("quality", per_verdict="approve", confidence=0.85),
         _make_agent_result("test", per_verdict="approve", confidence=0.85),
         _make_agent_result("docs", per_verdict="approve", confidence=0.85),
@@ -477,6 +503,7 @@ async def test_conflict_detected_when_agents_disagree():
 # Test 15: partial_review flag — 3/4 agents succeeded
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_partial_review_flag():
     """
@@ -489,8 +516,13 @@ async def test_partial_review_flag():
         _make_agent_result("security", per_verdict="approve", confidence=0.9),
         _make_agent_result("quality", per_verdict="approve", confidence=0.85),
         _make_agent_result("test", per_verdict="approve", confidence=0.85),
-        _make_agent_result("docs", success=False, per_verdict="approve",
-                           error_message="Timeout", confidence=0.0),
+        _make_agent_result(
+            "docs",
+            success=False,
+            per_verdict="approve",
+            error_message="Timeout",
+            confidence=0.0,
+        ),
     ]
     state = _make_state(results)
 
@@ -504,6 +536,7 @@ async def test_partial_review_flag():
 # Test 16: Rule 1 — security agent failure -> HITL
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_rule1_security_failure_hitl():
     """Security agent failure -> NEEDS_HUMAN_REVIEW regardless of others."""
@@ -511,8 +544,13 @@ async def test_rule1_security_failure_hitl():
     from backend.orchestrator.nodes import aggregate_results
 
     results = [
-        _make_agent_result("security", success=False, error_message="LLM timeout",
-                           per_verdict="approve", confidence=0.0),
+        _make_agent_result(
+            "security",
+            success=False,
+            error_message="LLM timeout",
+            per_verdict="approve",
+            confidence=0.0,
+        ),
         _make_agent_result("quality", per_verdict="approve", confidence=0.9),
         _make_agent_result("test", per_verdict="approve", confidence=0.9),
         _make_agent_result("docs", per_verdict="approve", confidence=0.9),
@@ -529,6 +567,7 @@ async def test_rule1_security_failure_hitl():
 # Test 17: Rule 4 — only 1 agent succeeded -> HITL
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_rule4_too_few_agents_hitl():
     """
@@ -540,12 +579,27 @@ async def test_rule4_too_few_agents_hitl():
 
     results = [
         _make_agent_result("security", per_verdict="approve", confidence=0.9),
-        _make_agent_result("quality", success=False, error_message="fail",
-                           per_verdict="approve", confidence=0.0),
-        _make_agent_result("test", success=False, error_message="fail",
-                           per_verdict="approve", confidence=0.0),
-        _make_agent_result("docs", success=False, error_message="fail",
-                           per_verdict="approve", confidence=0.0),
+        _make_agent_result(
+            "quality",
+            success=False,
+            error_message="fail",
+            per_verdict="approve",
+            confidence=0.0,
+        ),
+        _make_agent_result(
+            "test",
+            success=False,
+            error_message="fail",
+            per_verdict="approve",
+            confidence=0.0,
+        ),
+        _make_agent_result(
+            "docs",
+            success=False,
+            error_message="fail",
+            per_verdict="approve",
+            confidence=0.0,
+        ),
     ]
     state = _make_state(results)
 
@@ -558,6 +612,7 @@ async def test_rule4_too_few_agents_hitl():
 # =============================================================================
 # Test 18: Rule 3 — low overall confidence -> HITL
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_rule3_low_confidence_hitl():
@@ -583,6 +638,7 @@ async def test_rule3_low_confidence_hitl():
 # =============================================================================
 # Test 19: BaseAgent.analyze() accepts AgentTask via new task= kwarg
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_base_agent_accepts_agent_task():
@@ -625,6 +681,7 @@ async def test_base_agent_accepts_agent_task():
 # =============================================================================
 # Test 20: BaseAgent.analyze() with old positional args still works
 # =============================================================================
+
 
 @pytest.mark.asyncio
 async def test_base_agent_backward_compat():

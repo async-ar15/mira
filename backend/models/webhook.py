@@ -36,11 +36,13 @@ from backend.models.enums import PullRequestAction
 # Nested models - represent nested JSON objects in the payload
 # -----------------------------------------------------------------------------
 
+
 class WebhookPRHead(BaseModel):
     """
     The 'head' object inside a pull_request payload.
     Represents the branch being reviewed (the PR branch).
     """
+
     # The git commit SHA at the tip of the PR branch.
     # This is what we use for idempotency.
     sha: str
@@ -54,6 +56,7 @@ class WebhookPRBase(BaseModel):
     The 'base' object inside a pull_request payload.
     Represents the target branch (usually 'main' or 'develop').
     """
+
     # The target branch name. e.g. "main"
     ref: str
 
@@ -63,6 +66,7 @@ class WebhookPRUser(BaseModel):
     The 'user' object inside a pull_request payload.
     Represents the GitHub user who opened the PR.
     """
+
     # GitHub username. e.g. "async-ar15"
     login: str
 
@@ -72,6 +76,7 @@ class WebhookPullRequest(BaseModel):
     The 'pull_request' object inside the webhook payload.
     Contains all the information about the PR itself.
     """
+
     # PR title. e.g. "Add login feature"
     title: str
 
@@ -101,6 +106,7 @@ class WebhookRepository(BaseModel):
     The 'repository' object inside the webhook payload.
     Represents the GitHub repository.
     """
+
     # Full name in format "owner/repo". e.g. "async-ar15/my-project"
     full_name: str
 
@@ -111,6 +117,7 @@ class WebhookRepository(BaseModel):
 # -----------------------------------------------------------------------------
 # Top-level webhook event model
 # -----------------------------------------------------------------------------
+
 
 class WebhookEvent(BaseModel):
     """

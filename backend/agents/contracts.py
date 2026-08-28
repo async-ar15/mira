@@ -81,6 +81,7 @@ from typing import Any
 #   The mapping: CRITICAL finding -> CRITICAL_BLOCK, HIGH -> REQUEST_CHANGES, else -> APPROVE.
 # =============================================================================
 
+
 class AgentVerdict(str, Enum):
     """
     The per-agent conclusion, distinct from the system-wide ReviewVerdict.
@@ -124,6 +125,7 @@ class AgentVerdict(str, Enum):
 #   the system works exactly as before — this is additive, not breaking.
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class PeerFindingSummary:
     """
@@ -136,18 +138,18 @@ class PeerFindingSummary:
     """
 
     # Which agent produced these findings.
-    agent_type: str            # "security", "quality", "test", "docs"
+    agent_type: str  # "security", "quality", "test", "docs"
 
     # How many findings that agent produced.
     finding_count: int
 
     # The most serious finding that agent produced.
     # Allows the receiving agent to know the current threat level.
-    highest_severity: str      # "critical", "high", "medium", "low", or "none"
+    highest_severity: str  # "critical", "high", "medium", "low", or "none"
 
     # File paths that agent flagged (deduplicated).
     # Allows the receiving agent to know which files are already under scrutiny.
-    flagged_files: tuple[str, ...]   # tuple (not list) because frozen dataclass
+    flagged_files: tuple[str, ...]  # tuple (not list) because frozen dataclass
 
 
 # =============================================================================
@@ -170,6 +172,7 @@ class PeerFindingSummary:
 #   it could affect other agents (they share the same state dict via LangGraph).
 #   frozen=True makes mutation a TypeError at runtime, not a silent bug.
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class AgentTask:
@@ -267,6 +270,7 @@ class AgentTask:
 # One row in the verdict breakdown table — what one agent concluded.
 # =============================================================================
 
+
 @dataclass
 class VerdictRecord:
     """
@@ -310,10 +314,10 @@ class VerdictRecord:
         Uses .value for the AgentVerdict enum so it serializes to a plain string.
         """
         return {
-            "agent_type":    self.agent_type,
-            "succeeded":     self.succeeded,
-            "verdict":       self.verdict.value,   # "approve" not AgentVerdict.APPROVE
-            "confidence":    self.confidence,
+            "agent_type": self.agent_type,
+            "succeeded": self.succeeded,
+            "verdict": self.verdict.value,  # "approve" not AgentVerdict.APPROVE
+            "confidence": self.confidence,
             "finding_count": self.finding_count,
             "error_message": self.error_message,
         }
@@ -338,6 +342,7 @@ class VerdictRecord:
 #   The node aggregate_results() calls it and unpacks the result into state.
 # =============================================================================
 
+
 @dataclass
 class AggregationResult:
     """
@@ -353,7 +358,7 @@ class AggregationResult:
     # The final system-level verdict.
     # APPROVE / REQUEST_CHANGES / NEEDS_HUMAN_REVIEW
     # (This is ReviewVerdict, not AgentVerdict — the system verdict, not a per-agent verdict.)
-    verdict: Any                   # ReviewVerdict enum — imported in nodes.py to avoid circular
+    verdict: Any  # ReviewVerdict enum — imported in nodes.py to avoid circular
 
     # Per-agent breakdown for the audit log.
     # One VerdictRecord per agent (4 records for a normal run).

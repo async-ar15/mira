@@ -27,6 +27,7 @@ class PRReviewAgentError(Exception):
 # Webhook Exceptions
 # -----------------------------------------------------------------------------
 
+
 class WebhookValidationError(PRReviewAgentError):
     """
     Raised when a GitHub webhook fails HMAC signature validation.
@@ -47,6 +48,7 @@ class WebhookParseError(PRReviewAgentError):
 # -----------------------------------------------------------------------------
 # Job Queue Exceptions
 # -----------------------------------------------------------------------------
+
 
 class JobEnqueueError(PRReviewAgentError):
     """
@@ -72,6 +74,7 @@ class DuplicateWebhookError(PRReviewAgentError):
     Includes the idempotency_key so the caller can log which event was skipped.
     Not an error — the caller should return HTTP 200 silently.
     """
+
     def __init__(self, message: str, idempotency_key: str | None = None):
         super().__init__(message)
         self.idempotency_key = idempotency_key
@@ -81,11 +84,13 @@ class DuplicateWebhookError(PRReviewAgentError):
 # Orchestrator Exceptions
 # -----------------------------------------------------------------------------
 
+
 class WorkflowError(PRReviewAgentError):
     """
     Raised when the LangGraph workflow encounters an unrecoverable error.
     Includes the workflow_id so we can look up the failed run in the database.
     """
+
     def __init__(self, message: str, workflow_id: str | None = None):
         super().__init__(message)
         self.workflow_id = workflow_id
@@ -110,12 +115,14 @@ class WorkflowNotFoundError(WorkflowError):
 # Agent Exceptions
 # -----------------------------------------------------------------------------
 
+
 class AgentError(PRReviewAgentError):
     """
     Raised when a specialist sub-agent (security, quality, test, docs)
     fails to complete its analysis. Includes the agent name so we know
     which one failed.
     """
+
     def __init__(self, message: str, agent_name: str | None = None):
         super().__init__(message)
         self.agent_name = agent_name
@@ -133,11 +140,13 @@ class AgentOutputValidationError(AgentError):
 # GitHub API Exceptions
 # -----------------------------------------------------------------------------
 
+
 class GitHubAPIError(PRReviewAgentError):
     """
     Raised when the GitHub REST API returns an error response.
     Includes the HTTP status code so the caller can decide whether to retry.
     """
+
     def __init__(self, message: str, status_code: int | None = None):
         super().__init__(message)
         self.status_code = status_code
@@ -148,6 +157,7 @@ class GitHubRateLimitError(GitHubAPIError):
     Raised when we hit GitHub's API rate limit (HTTP 429).
     The caller should back off and retry after the reset time.
     """
+
     def __init__(self, message: str, retry_after_seconds: int | None = None):
         super().__init__(message, status_code=429)
         self.retry_after_seconds = retry_after_seconds
@@ -157,11 +167,13 @@ class GitHubRateLimitError(GitHubAPIError):
 # Memory / Storage Exceptions
 # -----------------------------------------------------------------------------
 
+
 class MemoryStoreError(PRReviewAgentError):
     """
     Raised when a read or write to any memory store (Redis, Qdrant, Postgres) fails.
     Includes the store name so we know which one is down.
     """
+
     def __init__(self, message: str, store: str | None = None):
         super().__init__(message)
         self.store = store
@@ -170,6 +182,7 @@ class MemoryStoreError(PRReviewAgentError):
 # -----------------------------------------------------------------------------
 # Configuration Exceptions
 # -----------------------------------------------------------------------------
+
 
 class ConfigurationError(PRReviewAgentError):
     """
@@ -181,6 +194,7 @@ class ConfigurationError(PRReviewAgentError):
 # -----------------------------------------------------------------------------
 # Prompt Registry Exceptions
 # -----------------------------------------------------------------------------
+
 
 class PromptNotFoundError(PRReviewAgentError):
     """
@@ -200,6 +214,7 @@ class PromptNotFoundError(PRReviewAgentError):
         version:    e.g. "v1", "latest"
         message:    Human-readable description of what is missing.
     """
+
     def __init__(self, agent_type: str, version: str, message: str):
         super().__init__(message)
         self.agent_type = agent_type

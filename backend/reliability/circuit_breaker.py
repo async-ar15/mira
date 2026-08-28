@@ -59,8 +59,10 @@ from typing import Any
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, Enum):  # type: ignore[no-redef]
         pass
+
 
 logger = logging.getLogger(__name__)
 
@@ -69,15 +71,17 @@ logger = logging.getLogger(__name__)
 # State vocabulary
 # ---------------------------------------------------------------------------
 
+
 class BreakerState(StrEnum):
-    CLOSED    = "closed"     # Normal — calls pass through
-    OPEN      = "open"       # Failing fast — calls rejected immediately
+    CLOSED = "closed"  # Normal — calls pass through
+    OPEN = "open"  # Failing fast — calls rejected immediately
     HALF_OPEN = "half_open"  # Probing — limited calls allowed
 
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class BreakerConfig:
@@ -91,6 +95,7 @@ class BreakerConfig:
                                 Usually 1 — pass one call, if it succeeds -> CLOSED.
         name                 -- Human-readable identifier for logs and health endpoints.
     """
+
     failure_threshold: int = 5
     recovery_timeout_s: float = 60.0
     half_open_max_calls: int = 1
@@ -106,7 +111,7 @@ DEFAULT_LLM_BREAKER_CONFIG = BreakerConfig(
 )
 
 DEFAULT_TOOL_BREAKER_CONFIG = BreakerConfig(
-    failure_threshold=3,   # Tools are cheap — trip faster
+    failure_threshold=3,  # Tools are cheap — trip faster
     recovery_timeout_s=30.0,
     name="tool_sandbox",
 )
@@ -122,6 +127,7 @@ DEFAULT_VECTOR_BREAKER_CONFIG = BreakerConfig(
 # Exceptions
 # ---------------------------------------------------------------------------
 
+
 class CircuitOpenError(Exception):
     """
     Raised when call() is attempted while the breaker is OPEN.
@@ -133,6 +139,7 @@ class CircuitOpenError(Exception):
     Wiki ref: "Circuit breakers trip automatically and route traffic
     elsewhere." Retrying on CircuitOpenError defeats the pattern.
     """
+
     def __init__(self, breaker_name: str, retry_after_s: float | None = None) -> None:
         self.breaker_name = breaker_name
         self.retry_after_s = retry_after_s
@@ -145,6 +152,7 @@ class CircuitOpenError(Exception):
 # ---------------------------------------------------------------------------
 # CircuitBreaker
 # ---------------------------------------------------------------------------
+
 
 class CircuitBreaker:
     """

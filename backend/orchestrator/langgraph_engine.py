@@ -86,7 +86,6 @@ class LangGraphEngine(WorkflowEngine):
         return PRReviewState(
             # Identity
             workflow_id=workflow_id,
-
             # PR context from webhook (known before GitHub API call)
             repo_full_name=input_data["repo_full_name"],
             pr_number=input_data["pr_number"],
@@ -95,29 +94,23 @@ class LangGraphEngine(WorkflowEngine):
             author_login=input_data.get("author_login", ""),
             head_commit_sha=input_data["head_commit_sha"],
             base_branch=input_data.get("base_branch", "main"),
-
             # These are filled by build_context node (require GitHub API call)
             # If pr_diff was passed in input_data (e.g. demo fixture), use it.
             pr_diff=input_data.get("pr_diff", ""),
             changed_files=[],
-
             # Agent results (filled by fan_out_agents node)
             agent_results=[],
-
             # Aggregation results (filled by aggregate_results node)
             verdict=None,
             final_findings=[],
             overall_confidence=0.0,
             needs_human_review=False,
             human_review_reason="",
-
             # Post-review results (filled by post_review node)
             review_posted=False,
             github_review_id=None,
-
             # Workflow metadata
             status=ReviewStatus.RECEIVED,
-
             # Capture threshold at workflow start so a settings change
             # mid-run doesn't affect an in-progress review
             confidence_threshold=cfg.confidence_threshold,
@@ -141,13 +134,15 @@ class LangGraphEngine(WorkflowEngine):
         findings: list[AgentFindingSummary] = []
         for f in final_state.get("final_findings", []):
             try:
-                findings.append(AgentFindingSummary(
-                    agent_type=f.get("agent_type", "unknown"),
-                    severity=FindingSeverity(f.get("severity", "low")),
-                    category=FindingCategory(f.get("category", "quality")),
-                    summary=f.get("summary", ""),
-                    confidence=float(f.get("confidence", 0.5)),
-                ))
+                findings.append(
+                    AgentFindingSummary(
+                        agent_type=f.get("agent_type", "unknown"),
+                        severity=FindingSeverity(f.get("severity", "low")),
+                        category=FindingCategory(f.get("category", "quality")),
+                        summary=f.get("summary", ""),
+                        confidence=float(f.get("confidence", 0.5)),
+                    )
+                )
             except (ValueError, KeyError) as e:
                 logger.warning("Could not parse finding: %s | error: %s", f, str(e))
 
@@ -161,7 +156,11 @@ class LangGraphEngine(WorkflowEngine):
         verdict: ReviewVerdict | None = None
         if raw_verdict is not None:
             try:
-                verdict = ReviewVerdict(raw_verdict) if isinstance(raw_verdict, str) else raw_verdict
+                verdict = (
+                    ReviewVerdict(raw_verdict)
+                    if isinstance(raw_verdict, str)
+                    else raw_verdict
+                )
             except ValueError:
                 pass
 

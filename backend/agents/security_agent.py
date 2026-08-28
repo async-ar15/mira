@@ -52,15 +52,18 @@ class SecurityAgent(BaseAgent):
         # result.findings: list of AgentFinding
         # result.confidence: mean confidence across findings
     """
+
     # Phase 7: declare the tools this agent is allowed to call.
     # This mirrors CAPABILITY_MAP[AgentType.SECURITY] in capability_scope.py.
     # Keeping it here makes capabilities visible without importing capability_scope.
     # The real enforcement gate is BaseAgent.call_tool() -> raise_if_not_allowed().
-    CAPABILITIES: frozenset[str] = frozenset({
-        "check_secrets_pattern",
-        "search_similar_findings",
-        "get_dependency_advisory",
-    })
+    CAPABILITIES: frozenset[str] = frozenset(
+        {
+            "check_secrets_pattern",
+            "search_similar_findings",
+            "get_dependency_advisory",
+        }
+    )
 
     @property
     def agent_type(self) -> AgentType:

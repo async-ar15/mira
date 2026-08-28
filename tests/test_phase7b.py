@@ -45,6 +45,7 @@ from backend.tools.tool_registry import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_minimal_tool(name: str) -> ToolDefinition:
     """Helper: create a valid ToolDefinition for testing registry operations."""
     return ToolDefinition(
@@ -66,6 +67,7 @@ def make_minimal_tool(name: str) -> ToolDefinition:
 # Test 1: ToolRegistry.register() and .get()
 # ---------------------------------------------------------------------------
 
+
 def test_registry_register_and_get():
     """
     Registering a tool and fetching it back by name must work.
@@ -84,6 +86,7 @@ def test_registry_register_and_get():
 # Test 2: ToolRegistry.list_names()
 # ---------------------------------------------------------------------------
 
+
 def test_registry_list_names():
     """list_names() returns all registered tool names, sorted."""
     reg = ToolRegistry()
@@ -99,6 +102,7 @@ def test_registry_list_names():
 # Test 3: Unknown tool name raises KeyError
 # ---------------------------------------------------------------------------
 
+
 def test_registry_unknown_tool_raises():
     """
     Calling an unregistered tool must raise KeyError immediately.
@@ -112,6 +116,7 @@ def test_registry_unknown_tool_raises():
 # ---------------------------------------------------------------------------
 # Test 4: Missing required argument raises ValueError
 # ---------------------------------------------------------------------------
+
 
 def test_registry_missing_required_arg_raises():
     """
@@ -128,6 +133,7 @@ def test_registry_missing_required_arg_raises():
 # ---------------------------------------------------------------------------
 # Test 5: check_secrets_pattern detects hardcoded password
 # ---------------------------------------------------------------------------
+
 
 def test_check_secrets_detects_password():
     """
@@ -151,6 +157,7 @@ def test_check_secrets_detects_password():
 # Test 6: check_secrets_pattern returns found=False on clean text
 # ---------------------------------------------------------------------------
 
+
 def test_check_secrets_clean_diff():
     """
     A diff with no secrets must return found=False.
@@ -171,6 +178,7 @@ def test_check_secrets_clean_diff():
 # Test 7: check_secrets_pattern detects AWS access key
 # ---------------------------------------------------------------------------
 
+
 def test_check_secrets_detects_aws_key():
     """AWS AKIA* pattern is high-signal. Must be caught."""
     diff = "+    aws_key = 'AKIAIOSFODNN7EXAMPLE'\n"
@@ -184,6 +192,7 @@ def test_check_secrets_detects_aws_key():
 # ---------------------------------------------------------------------------
 # Test 8: Sandbox valid Python syntax returns valid=True
 # ---------------------------------------------------------------------------
+
 
 def test_sandbox_valid_python():
     """
@@ -204,6 +213,7 @@ def test_sandbox_valid_python():
 # ---------------------------------------------------------------------------
 # Test 9: Sandbox invalid Python syntax returns exit_code != 0
 # ---------------------------------------------------------------------------
+
 
 def test_sandbox_invalid_python():
     """
@@ -226,6 +236,7 @@ def test_sandbox_invalid_python():
 # Test 10: Sandbox disallowed language raises SandboxViolationError
 # ---------------------------------------------------------------------------
 
+
 def test_sandbox_disallowed_language_raises():
     """
     Requesting execution in a disallowed language must raise SandboxViolationError
@@ -240,6 +251,7 @@ def test_sandbox_disallowed_language_raises():
 # Test 11: Capability scope — SecurityAgent allowed check_secrets_pattern
 # ---------------------------------------------------------------------------
 
+
 def test_security_agent_allowed_check_secrets():
     """
     SecurityAgent must be allowed to call check_secrets_pattern.
@@ -251,6 +263,7 @@ def test_security_agent_allowed_check_secrets():
 # ---------------------------------------------------------------------------
 # Test 12: Capability scope — DocsAgent NOT allowed run_syntax_check
 # ---------------------------------------------------------------------------
+
 
 def test_docs_agent_not_allowed_syntax_check():
     """
@@ -264,6 +277,7 @@ def test_docs_agent_not_allowed_syntax_check():
 # Test 13: Capability scope — QualityAgent allowed run_syntax_check
 # ---------------------------------------------------------------------------
 
+
 def test_quality_agent_allowed_syntax_check():
     """QualityAgent must have run_syntax_check in its scope."""
     assert check_capability(AgentType.QUALITY, "run_syntax_check") is True
@@ -272,6 +286,7 @@ def test_quality_agent_allowed_syntax_check():
 # ---------------------------------------------------------------------------
 # Test 14: raise_if_not_allowed raises CapabilityViolationError
 # ---------------------------------------------------------------------------
+
 
 def test_raise_if_not_allowed_fires():
     """
@@ -292,6 +307,7 @@ def test_raise_if_not_allowed_fires():
 # Test 15: BaseAgent.call_tool() enforces scope (CapabilityViolationError)
 # ---------------------------------------------------------------------------
 
+
 def test_base_agent_call_tool_scope_violation():
     """
     An agent calling a tool outside its capability scope via call_tool()
@@ -303,7 +319,9 @@ def test_base_agent_call_tool_scope_violation():
     agent = DocsAgent()
     # DocsAgent is not allowed to call run_syntax_check
     with pytest.raises(CapabilityViolationError) as exc_info:
-        agent.call_tool("run_syntax_check", {"code": "print('hi')", "language": "python"})
+        agent.call_tool(
+            "run_syntax_check", {"code": "print('hi')", "language": "python"}
+        )
 
     assert exc_info.value.agent_type == AgentType.DOCS
 
@@ -311,6 +329,7 @@ def test_base_agent_call_tool_scope_violation():
 # ---------------------------------------------------------------------------
 # Test 16: BaseAgent.call_tool() succeeds for allowed tool
 # ---------------------------------------------------------------------------
+
 
 def test_base_agent_call_tool_allowed():
     """

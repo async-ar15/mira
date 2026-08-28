@@ -65,6 +65,7 @@ class ModelConfig:
 
     FIELDS:
     """
+
     # Which LLM provider handles this agent's calls.
     # "gemini" -> use llm_client.call_gemini()
     provider: str
@@ -94,33 +95,29 @@ class ModelConfig:
 # ---------------------------------------------------------------------------
 
 _ROUTING_TABLE: dict[AgentType, ModelConfig] = {
-
     AgentType.SECURITY: ModelConfig(
         provider="gemini",
         model_name=os.environ.get("SECURITY_MODEL", "gemini-3.1-pro-preview"),
         context_budget_tokens=8000,
         max_response_tokens=2048,
     ),
-
     AgentType.QUALITY: ModelConfig(
         provider="gemini",
         model_name=os.environ.get("QUALITY_MODEL", "gemini-3.7-flash"),
         context_budget_tokens=6000,  # Needs function-level context
         max_response_tokens=2048,
     ),
-
     AgentType.TEST: ModelConfig(
         provider="gemini",
         model_name=os.environ.get("TEST_MODEL", "gemini-3.7-flash"),
         context_budget_tokens=5000,  # Needs to see what was added
         max_response_tokens=2048,
     ),
-
     AgentType.DOCS: ModelConfig(
         provider="gemini",
         model_name=os.environ.get("DOCS_MODEL", "gemini-3.7-flash"),
         context_budget_tokens=4000,  # Only needs function signatures
-        max_response_tokens=1024,    # Docs findings are shorter
+        max_response_tokens=1024,  # Docs findings are shorter
     ),
 }
 

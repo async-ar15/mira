@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class SandboxConfig:
     """
@@ -76,6 +77,7 @@ class SandboxConfig:
 # Result dataclass
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class SandboxResult:
     """
@@ -87,6 +89,7 @@ class SandboxResult:
     timed_out:      True if the subprocess was killed due to timeout
     execution_time_ms: wall-clock time in milliseconds
     """
+
     exit_code: int
     stdout: str
     stderr: str
@@ -97,6 +100,7 @@ class SandboxResult:
 # ---------------------------------------------------------------------------
 # Exceptions
 # ---------------------------------------------------------------------------
+
 
 class SandboxViolationError(Exception):
     """
@@ -117,6 +121,7 @@ class SandboxViolationError(Exception):
 # ---------------------------------------------------------------------------
 # Sandbox class
 # ---------------------------------------------------------------------------
+
 
 class Sandbox:
     """

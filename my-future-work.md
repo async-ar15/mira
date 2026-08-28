@@ -315,9 +315,9 @@ curl https://your-railway-url.up.railway.app/health
 async def purge_old_events(ctx):
     retention_days = settings.retention_days  # add to settings.py
     await db.execute(
-        "DELETE FROM agent_events WHERE ts < NOW() - INTERVAL '$1 days'",
-        retention_days
+        "DELETE FROM agent_events WHERE ts < NOW() - INTERVAL '$1 days'", retention_days
     )
+
 
 # Register as cron in WorkerSettings:
 cron_jobs = [cron(purge_old_events, hour=2, minute=0)]  # runs at 2am daily
@@ -337,16 +337,19 @@ cron_jobs = [cron(purge_old_events, hour=2, minute=0)]  # runs at 2am daily
 ```python
 # backend/observability/log_shipper.py
 
+
 async def ship_audit_event(event: dict):
     if settings.app_env == "production" and settings.aws_s3_bucket:
         await ship_to_s3(event)
     else:
         await ship_to_local_file(event)
 
+
 async def ship_to_local_file(event: dict):
     path = Path("logs/audit") / datetime.now().strftime("%Y-%m-%d")
     path.mkdir(parents=True, exist_ok=True)
     (path / f"{uuid4()}.json").write_text(json.dumps(event))
+
 
 async def ship_to_s3(event: dict):
     # boto3 async via aioboto3
@@ -520,14 +523,15 @@ AUTO_MODEL_ROUTING=false
 ```python
 from backend.economics.routing_advisor import recommend_model
 
+
 async def _get_model_config(self, agent_type: AgentType) -> ModelConfig:
     base_config = get_routing_table()[agent_type]
-    
+
     if settings.auto_model_routing:
         recommendation = await recommend_model(agent_type, recent_verdicts)
         if recommendation.route_to_cheaper:
             return base_config.with_model(recommendation.cheaper_model)
-    
+
     return base_config
 ```
 
@@ -567,6 +571,7 @@ class RoutingRecommendation:
 ```python
 # backend/job_queue/tasks/feedback_aggregation.py
 
+
 async def aggregate_feedback(ctx):
     results = await db.fetch("""
         SELECT 
@@ -579,7 +584,7 @@ async def aggregate_feedback(ctx):
           AND ts > NOW() - INTERVAL '30 days'
         GROUP BY agent
     """)
-    
+
     # Store results in a summary table or Redis for fast dashboard reads
     await store_calibration_summary(results)
 ```
@@ -595,10 +600,10 @@ async def aggregate_feedback(ctx):
 # Returns per-agent agreement rates
 
 {
-  "security": {"agreement_rate": 0.87, "total_decisions": 42, "avg_confidence": 0.91},
-  "quality":  {"agreement_rate": 0.73, "total_decisions": 38, "avg_confidence": 0.78},
-  "test":     {"agreement_rate": 0.81, "total_decisions": 35, "avg_confidence": 0.83},
-  "docs":     {"agreement_rate": 0.69, "total_decisions": 29, "avg_confidence": 0.75}
+    "security": {"agreement_rate": 0.87, "total_decisions": 42, "avg_confidence": 0.91},
+    "quality": {"agreement_rate": 0.73, "total_decisions": 38, "avg_confidence": 0.78},
+    "test": {"agreement_rate": 0.81, "total_decisions": 35, "avg_confidence": 0.83},
+    "docs": {"agreement_rate": 0.69, "total_decisions": 29, "avg_confidence": 0.75},
 }
 ```
 

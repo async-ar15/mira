@@ -45,6 +45,7 @@ REDIS_CACHE_TIMEOUT = 60  # Check Redis every 60s
 _last_redis_check = 0
 _redis_status = "unknown"
 
+
 def get_redis_status():
     global _last_redis_check, _redis_status
     now = time.time()
@@ -67,6 +68,7 @@ Fix: Use shorter TTL since PRs are short-lived
 # In backend/webhook_receiver/router.py
 # Current (probably 24 hours)
 IDEMPOTENCY_TTL = 3600  # 1 hour instead of 24
+
 
 async def set_idempotency_key(key: str):
     await redis.setex(key, IDEMPOTENCY_TTL, "1")
@@ -210,12 +212,15 @@ gh pr create --repo async-ar15/mira-test-repo \
 # Add this temporarily to see Redis calls
 import functools
 
+
 def track_redis_calls(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         print(f"REDIS CALL: {func.__name__} {args}")
         return await func(*args, **kwargs)
+
     return wrapper
+
 
 # Apply to redis client methods
 redis.get = track_redis_calls(redis.get)

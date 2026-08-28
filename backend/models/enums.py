@@ -23,6 +23,7 @@ from enum import Enum
 # Every PR review job moves through these states in order (happy path).
 # -----------------------------------------------------------------------------
 
+
 class ReviewStatus(str, Enum):
     """
     The state of a PR review job.
@@ -69,6 +70,7 @@ class ReviewStatus(str, Enum):
 # How serious is the issue an agent found?
 # -----------------------------------------------------------------------------
 
+
 class FindingSeverity(str, Enum):
     """
     How serious a finding is. Used to decide:
@@ -99,21 +101,24 @@ class FindingSeverity(str, Enum):
 # Which agent produced this finding?
 # -----------------------------------------------------------------------------
 
+
 class FindingCategory(str, Enum):
     """
     What domain this finding belongs to.
     Maps directly to which sub-agent produced it.
     """
-    SECURITY = "security"       # SecurityAgent - vulnerabilities, secrets, injection
-    QUALITY = "quality"         # QualityAgent - correctness, logic, code smells
-    TEST_COVERAGE = "test"      # TestAgent - missing tests, uncovered edge cases
-    DOCUMENTATION = "docs"      # DocsAgent - missing or outdated docs
+
+    SECURITY = "security"  # SecurityAgent - vulnerabilities, secrets, injection
+    QUALITY = "quality"  # QualityAgent - correctness, logic, code smells
+    TEST_COVERAGE = "test"  # TestAgent - missing tests, uncovered edge cases
+    DOCUMENTATION = "docs"  # DocsAgent - missing or outdated docs
 
 
 # -----------------------------------------------------------------------------
 # Review Verdict
 # The overall conclusion of the review.
 # -----------------------------------------------------------------------------
+
 
 class ReviewVerdict(str, Enum):
     """
@@ -124,6 +129,7 @@ class ReviewVerdict(str, Enum):
     NEEDS_HUMAN_REVIEW:   Agent is not confident enough to decide.
                           Goes to HITL approval queue (touchpoint 1).
     """
+
     APPROVE = "approve"
     REQUEST_CHANGES = "request_changes"
     NEEDS_HUMAN_REVIEW = "needs_human_review"
@@ -134,6 +140,7 @@ class ReviewVerdict(str, Enum):
 # Which specialist agent produced a finding.
 # Also used by the model router to look up the correct model config.
 # -----------------------------------------------------------------------------
+
 
 class AgentType(str, Enum):
     """
@@ -148,10 +155,11 @@ class AgentType(str, Enum):
     DOCS:      Looks for missing docstrings, type hints, README gaps.
                Uses gpt-4o-mini (cheapest task).
     """
+
     SECURITY = "security"
-    QUALITY  = "quality"
-    TEST     = "test"
-    DOCS     = "docs"
+    QUALITY = "quality"
+    TEST = "test"
+    DOCS = "docs"
 
 
 # -----------------------------------------------------------------------------
@@ -159,27 +167,30 @@ class AgentType(str, Enum):
 # Which action on the PR triggered the webhook.
 # -----------------------------------------------------------------------------
 
+
 class PREventAction(str, Enum):
     """
     The 'action' field from a GitHub pull_request webhook payload.
     We only process OPENED, REOPENED, and SYNCHRONIZE (new commits pushed).
     The webhook receiver filters out all other actions early.
     """
-    OPENED      = "opened"
-    REOPENED    = "reopened"
-    SYNCHRONIZE = "synchronize"   # new commits pushed to an open PR
-    CLOSED      = "closed"
-    EDITED      = "edited"
-    LABELED     = "labeled"
-    UNLABELED   = "unlabeled"
-    ASSIGNED    = "assigned"
-    UNASSIGNED  = "unassigned"
+
+    OPENED = "opened"
+    REOPENED = "reopened"
+    SYNCHRONIZE = "synchronize"  # new commits pushed to an open PR
+    CLOSED = "closed"
+    EDITED = "edited"
+    LABELED = "labeled"
+    UNLABELED = "unlabeled"
+    ASSIGNED = "assigned"
+    UNASSIGNED = "unassigned"
 
 
 # -----------------------------------------------------------------------------
 # User Roles (RBAC)
 # What a user is allowed to do in the system.
 # -----------------------------------------------------------------------------
+
 
 class UserRole(str, Enum):
     """
@@ -192,6 +203,7 @@ class UserRole(str, Enum):
     OVERRIDE:   Special role. Can force-approve a PR the agent blocked.
                 Override is always logged in the audit trail with a reason.
     """
+
     DEVELOPER = "developer"
     REVIEWER = "reviewer"
     ADMIN = "admin"
@@ -203,11 +215,13 @@ class UserRole(str, Enum):
 # Only the ones we care about.
 # -----------------------------------------------------------------------------
 
+
 class WebhookEventType(str, Enum):
     """
     GitHub webhook event types we handle.
     We ignore all other event types silently.
     """
+
     PULL_REQUEST = "pull_request"
 
 
@@ -216,6 +230,7 @@ class PullRequestAction(str, Enum):
     Actions on a pull_request event that trigger a review.
     We ignore: closed, labeled, assigned, etc.
     """
-    OPENED = "opened"           # Brand new PR
-    SYNCHRONIZE = "synchronize" # New commit pushed to existing PR
-    REOPENED = "reopened"       # Previously closed PR was reopened
+
+    OPENED = "opened"  # Brand new PR
+    SYNCHRONIZE = "synchronize"  # New commit pushed to existing PR
+    REOPENED = "reopened"  # Previously closed PR was reopened

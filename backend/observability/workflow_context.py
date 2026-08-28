@@ -26,7 +26,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class WorkflowContext:
     workflow_id: str | None
-    agent_type: str    # "security", "quality", "system", etc.
+    agent_type: str  # "security", "quality", "system", etc.
 
 
 _DEFAULT = WorkflowContext(workflow_id=None, agent_type="system")

@@ -67,9 +67,7 @@ def parse_webhook_payload(
     try:
         payload_dict = json.loads(raw_body)
     except json.JSONDecodeError as e:
-        raise WebhookParseError(
-            f"Request body is not valid JSON: {e}"
-        ) from e
+        raise WebhookParseError(f"Request body is not valid JSON: {e}") from e
 
     # Step 3: Check the action field
     # We only trigger a review on: opened, synchronize, reopened.

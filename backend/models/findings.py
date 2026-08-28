@@ -161,9 +161,9 @@ class AgentFindingRaw(BaseModel):
             # Map agent type to its default category
             _agent_to_category = {
                 "security": FindingCategory.SECURITY,
-                "quality":  FindingCategory.QUALITY,
-                "test":     FindingCategory.TEST_COVERAGE,
-                "docs":     FindingCategory.DOCUMENTATION,
+                "quality": FindingCategory.QUALITY,
+                "test": FindingCategory.TEST_COVERAGE,
+                "docs": FindingCategory.DOCUMENTATION,
             }
             category = _agent_to_category.get(agent_type, FindingCategory.QUALITY)
 
@@ -257,13 +257,13 @@ class AgentFinding(BaseModel):
         because JSON/Redis serialization cannot handle Python enum objects.
         """
         return {
-            "agent_type":  self.agent_type,
-            "severity":    self.severity.value,       # "critical" not FindingSeverity.CRITICAL
-            "category":    self.category.value,       # "security" not FindingCategory.SECURITY
-            "summary":     self.summary,
-            "file_path":   self.file_path,
-            "line_start":  self.line_start,
-            "line_end":    self.line_end,
-            "suggestion":  self.suggestion,
-            "confidence":  self.confidence,
+            "agent_type": self.agent_type,
+            "severity": self.severity.value,  # "critical" not FindingSeverity.CRITICAL
+            "category": self.category.value,  # "security" not FindingCategory.SECURITY
+            "summary": self.summary,
+            "file_path": self.file_path,
+            "line_start": self.line_start,
+            "line_end": self.line_end,
+            "suggestion": self.suggestion,
+            "confidence": self.confidence,
         }

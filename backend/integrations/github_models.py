@@ -41,6 +41,7 @@ from pydantic import BaseModel, Field
 # Data we READ from GitHub (GET requests)
 # =============================================================================
 
+
 class PRMetadata(BaseModel):
     """
     Core metadata about a pull request.
@@ -123,6 +124,7 @@ class PRFileStatus(str, Enum):
     Defined as an Enum so security_agent can check for specific statuses
     (e.g., RENAMED files might bypass code review gates).
     """
+
     ADDED = "added"
     MODIFIED = "modified"
     REMOVED = "removed"
@@ -191,6 +193,7 @@ class PRFile(BaseModel):
 # Wired in Phase 8 but defined now (see module docstring for why).
 # =============================================================================
 
+
 class ReviewEvent(str, Enum):
     """
     The GitHub review event type.
@@ -203,6 +206,7 @@ class ReviewEvent(str, Enum):
          COMMENT is the safe fallback when confidence is borderline but
          we don't want to block the PR (Phase 9 HITL will decide).
     """
+
     APPROVE = "APPROVE"
     REQUEST_CHANGES = "REQUEST_CHANGES"
     COMMENT = "COMMENT"
@@ -305,7 +309,7 @@ class PostReviewResponse(BaseModel):
             "APPROVED": ReviewEvent.APPROVE,
             "CHANGES_REQUESTED": ReviewEvent.REQUEST_CHANGES,
             "COMMENTED": ReviewEvent.COMMENT,
-            "DISMISSED": ReviewEvent.COMMENT,   # treat as commentary
+            "DISMISSED": ReviewEvent.COMMENT,  # treat as commentary
             "PENDING": ReviewEvent.COMMENT,
             # also accept canonical request-form values (defensive)
             "APPROVE": ReviewEvent.APPROVE,

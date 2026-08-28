@@ -311,20 +311,22 @@ AgentEvent fields (dataclass):
 ```python
 @dataclass
 class AgentEvent:
-    ts: datetime           # UTC now()
+    ts: datetime  # UTC now()
     review_id: UUID
-    agent: str             # "security" | "quality" | "tests" | "docs" | "aggregator"
-    span_id: UUID          # gen per event
+    agent: str  # "security" | "quality" | "tests" | "docs" | "aggregator"
+    span_id: UUID  # gen per event
     parent_span: UUID | None
-    event_type: str        # "span.start" | "llm.call" | "tool.call" | "decision" | "span.end"
+    event_type: str  # "span.start" | "llm.call" | "tool.call" | "decision" | "span.end"
     model: str | None
     tokens_in: int | None
     tokens_out: int | None
     cost_usd: float | None
     latency_ms: int | None
-    outcome: str | None    # "approved" | "request_changes" | "critical_block" | "escalated"
+    outcome: (
+        str | None
+    )  # "approved" | "request_changes" | "critical_block" | "escalated"
     confidence: float | None
-    payload: dict | None   # raw LLM output, tool args, etc.
+    payload: dict | None  # raw LLM output, tool args, etc.
 ```
 
 ### 8. backend/economics/cost_repository.py  [MODIFIED]
@@ -378,7 +380,7 @@ Full immutable chronological trace. No extra table needed.
 
 Add:
 ```python
-TIGER_DATABASE_URL: str = ""      # Tiger Cloud connection string (for production)
+TIGER_DATABASE_URL: str = ""  # Tiger Cloud connection string (for production)
 TIGER_POOL_SIZE: int = 10
 TIGER_MAX_OVERFLOW: int = 20
 ```

@@ -58,7 +58,9 @@ class BudgetStatusResponse(BaseModel):
     daily_cap_usd: float
     daily_spent_usd: float
     daily_headroom_usd: float
-    daily_utilization: float = Field(..., description="0.0-1.0+ ; >=1.0 means cap reached")
+    daily_utilization: float = Field(
+        ..., description="0.0-1.0+ ; >=1.0 means cap reached"
+    )
     per_review_cap_usd: float
     exceeded: bool
 
@@ -120,10 +122,15 @@ async def timeseries(
     Default window: 30 days. Cap: 365.
     """
     points = await get_daily_timeseries(days=days)
-    return [DailyPointResponse(date=p.date, cost_usd=p.cost_usd, call_count=p.call_count) for p in points]
+    return [
+        DailyPointResponse(date=p.date, cost_usd=p.cost_usd, call_count=p.call_count)
+        for p in points
+    ]
 
 
-@economics_router.get("/workflow/{workflow_id:path}", response_model=WorkflowCostResponse)
+@economics_router.get(
+    "/workflow/{workflow_id:path}", response_model=WorkflowCostResponse
+)
 async def workflow_cost(
     workflow_id: str,
     _auth: None = Depends(require_auth),
@@ -159,15 +166,19 @@ async def workflow_cost(
 # at any scale. No GROUP BY scan over raw rows.
 # =============================================================================
 
+
 @economics_router.get("/agent-health", summary="Per-agent health from Tiger aggregate")
 async def get_agent_health(
-    minutes: int = Query(default=60, ge=1, le=1440, description="Lookback window in minutes"),
+    minutes: int = Query(
+        default=60, ge=1, le=1440, description="Lookback window in minutes"
+    ),
 ) -> list[dict]:
     """
     Returns per-agent cost, p95 latency, and rejection rate over the last N minutes.
     Source: agent_health_1m continuous aggregate (TimescaleDB, refreshed every minute).
     """
     from backend.database.postgres import get_tiger_pool
+
     pool = get_tiger_pool()
     if pool is None:
         return []
@@ -192,7 +203,9 @@ async def get_agent_health(
     return [dict(r) for r in rows]
 
 
-@economics_router.get("/pr-cost/{review_id}", summary="Per-PR cost from Tiger aggregate")
+@economics_router.get(
+    "/pr-cost/{review_id}", summary="Per-PR cost from Tiger aggregate"
+)
 async def get_pr_cost(review_id: str) -> dict:
     """
     Returns total cost, tokens, agents used, and wall time for a specific PR review.
@@ -201,6 +214,7 @@ async def get_pr_cost(review_id: str) -> dict:
     import uuid
 
     from backend.database.postgres import get_tiger_pool
+
     pool = get_tiger_pool()
     if pool is None:
         return {"review_id": review_id, "total_cost_usd": 0.0, "total_tokens": 0}
@@ -222,11 +236,18 @@ async def get_pr_cost(review_id: str) -> dict:
     async with pool.acquire() as conn:
         row = await conn.fetchrow(sql, rid)
     if row is None:
-        return {"review_id": review_id, "total_cost_usd": 0.0, "total_tokens": 0, "note": "no data yet"}
+        return {
+            "review_id": review_id,
+            "total_cost_usd": 0.0,
+            "total_tokens": 0,
+            "note": "no data yet",
+        }
     return dict(row)
 
 
-@economics_router.get("/daily-summary", summary="24h cost + latency summary from Tiger aggregates")
+@economics_router.get(
+    "/daily-summary", summary="24h cost + latency summary from Tiger aggregates"
+)
 async def get_daily_summary() -> dict:
     """
     Returns a 24-hour rollup: total cost, total tokens, p95 latency per agent,
@@ -234,6 +255,7 @@ async def get_daily_summary() -> dict:
     Source: agent_health_1m continuous aggregate.
     """
     from backend.database.postgres import get_tiger_pool
+
     pool = get_tiger_pool()
     if pool is None:
         return {"error": "tiger pool not initialized"}

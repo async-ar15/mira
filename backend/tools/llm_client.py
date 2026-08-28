@@ -64,6 +64,7 @@ async def _persist_call_log(
     try:
         from backend.economics import record_llm_call
         from backend.observability.workflow_context import get_workflow_context
+
         ctx = get_workflow_context()
         await record_llm_call(
             workflow_id=ctx.workflow_id,
@@ -84,10 +85,10 @@ async def _persist_call_log(
 # ---------------------------------------------------------------------------
 _TOKEN_COSTS: dict[str, dict[str, float]] = {
     # Gemini models (Google AI Studio pricing)
-    "gemini-3.7-flash":         {"input": 0.0001,  "output": 0.0004},
-    "gemini-3.1-pro-preview":   {"input": 0.00125, "output": 0.005},
-    "gemini-2.0-flash":         {"input": 0.0001,  "output": 0.0004},
-    "gemini-2.5-pro":           {"input": 0.00125, "output": 0.005},
+    "gemini-3.7-flash": {"input": 0.0001, "output": 0.0004},
+    "gemini-3.1-pro-preview": {"input": 0.00125, "output": 0.005},
+    "gemini-2.0-flash": {"input": 0.0001, "output": 0.0004},
+    "gemini-2.5-pro": {"input": 0.00125, "output": 0.005},
 }
 
 
@@ -96,6 +97,7 @@ class LLMResponse:
     """
     The structured response from one LLM API call.
     """
+
     content: dict | str
     input_tokens: int
     output_tokens: int
@@ -112,7 +114,7 @@ def _compute_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     costs = _TOKEN_COSTS.get(model, {})
     if not costs:
         return 0.0
-    input_cost  = (input_tokens  / 1000) * costs.get("input",  0.0)
+    input_cost = (input_tokens / 1000) * costs.get("input", 0.0)
     output_cost = (output_tokens / 1000) * costs.get("output", 0.0)
     return round(input_cost + output_cost, 8)
 
@@ -155,6 +157,7 @@ class LLMClient:
         JSON mode: uses response_mime_type="application/json"
         """
         from backend.config import get_settings
+
         cfg = get_settings()
         key = api_key or cfg.google_api_key
 
@@ -187,7 +190,7 @@ class LLMClient:
 
                 latency = time.monotonic() - start
                 raw_content = response.text or "{}"
-                
+
                 try:
                     input_tokens = response.usage_metadata.prompt_token_count
                     output_tokens = response.usage_metadata.candidates_token_count
@@ -203,7 +206,8 @@ class LLMClient:
                     logger.warning(
                         "gemini_json_parse_failed | model=%s attempt=%d | "
                         "trying partial extraction",
-                        model, attempt,
+                        model,
+                        attempt,
                     )
                     parsed = _try_extract_json(raw_content)
                     is_valid_json = bool(parsed)
@@ -212,7 +216,11 @@ class LLMClient:
                 logger.info(
                     "gemini_call | model=%s input_tokens=%d output_tokens=%d "
                     "latency=%.2fs cost=$%.6f",
-                    model, input_tokens, output_tokens, latency, cost,
+                    model,
+                    input_tokens,
+                    output_tokens,
+                    latency,
+                    cost,
                 )
 
                 await _persist_call_log(
@@ -236,10 +244,13 @@ class LLMClient:
 
             except google_exceptions.ResourceExhausted as e:
                 last_error = e
-                delay = self.BASE_RETRY_DELAY * (2 ** attempt)
+                delay = self.BASE_RETRY_DELAY * (2**attempt)
                 logger.warning(
                     "gemini_rate_limit | model=%s attempt=%d/%d | waiting %.1fs",
-                    model, attempt + 1, self.MAX_RETRIES, delay,
+                    model,
+                    attempt + 1,
+                    self.MAX_RETRIES,
+                    delay,
                 )
                 if attempt < self.MAX_RETRIES:
                     await asyncio.sleep(delay)
@@ -247,20 +258,26 @@ class LLMClient:
             except google_exceptions.GoogleAPIError as e:
                 last_error = e
                 # Usually we want to retry on API errors
-                delay = self.BASE_RETRY_DELAY * (2 ** attempt)
+                delay = self.BASE_RETRY_DELAY * (2**attempt)
                 logger.warning(
                     "gemini_server_error | model=%s attempt=%d/%d | waiting %.1fs",
-                    model, attempt + 1, self.MAX_RETRIES, delay,
+                    model,
+                    attempt + 1,
+                    self.MAX_RETRIES,
+                    delay,
                 )
                 if attempt < self.MAX_RETRIES:
                     await asyncio.sleep(delay)
 
             except Exception as e:
                 last_error = e
-                delay = self.BASE_RETRY_DELAY * (2 ** attempt)
+                delay = self.BASE_RETRY_DELAY * (2**attempt)
                 logger.warning(
                     "gemini_unexpected_error | model=%s attempt=%d/%d error=%s",
-                    model, attempt + 1, self.MAX_RETRIES, str(e),
+                    model,
+                    attempt + 1,
+                    self.MAX_RETRIES,
+                    str(e),
                 )
                 if attempt < self.MAX_RETRIES:
                     await asyncio.sleep(delay)
@@ -281,7 +298,7 @@ def _try_extract_json(text: str) -> dict | list:
     cleaned = text.strip()
     for fence in ["```json", "```JSON", "```"]:
         if cleaned.startswith(fence):
-            cleaned = cleaned[len(fence):]
+            cleaned = cleaned[len(fence) :]
             break
     cleaned = cleaned.removesuffix("```")
     cleaned = cleaned.strip()
@@ -298,7 +315,7 @@ def _try_extract_json(text: str) -> dict | list:
         end = cleaned.rfind(end_char)
         if end > start:
             try:
-                return json.loads(cleaned[start:end + 1])
+                return json.loads(cleaned[start : end + 1])
             except json.JSONDecodeError:
                 continue
 

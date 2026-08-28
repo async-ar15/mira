@@ -24,19 +24,19 @@ from typing import Literal
 TaskComplexity = Literal["simple", "medium", "complex"]
 
 _RECOMMENDATIONS: dict[str, str] = {
-    "simple":  "gpt-4o-mini",
-    "medium":  "claude-3-haiku-20240307",
+    "simple": "gpt-4o-mini",
+    "medium": "claude-3-haiku-20240307",
     "complex": "claude-3-5-sonnet-20241022",
 }
 
 # Mirror of llm_client._TOKEN_COSTS — kept here intentionally so this module
 # does not have to import from tools/ (avoid layering inversion).
 _PRICES: dict[str, dict[str, float]] = {
-    "gpt-4o":                    {"input": 0.005,   "output": 0.015},
-    "gpt-4o-mini":               {"input": 0.00015, "output": 0.0006},
-    "gpt-3.5-turbo":             {"input": 0.0005,  "output": 0.0015},
-    "claude-3-5-sonnet-20241022":{"input": 0.003,   "output": 0.015},
-    "claude-3-haiku-20240307":   {"input": 0.00025, "output": 0.00125},
+    "gpt-4o": {"input": 0.005, "output": 0.015},
+    "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
+    "gpt-3.5-turbo": {"input": 0.0005, "output": 0.0015},
+    "claude-3-5-sonnet-20241022": {"input": 0.003, "output": 0.015},
+    "claude-3-haiku-20240307": {"input": 0.00025, "output": 0.00125},
 }
 
 
