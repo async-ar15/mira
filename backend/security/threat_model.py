@@ -1,4 +1,4 @@
-"""
+﻿"""
 backend/security/threat_model.py
 
 Phase 11: Unified Threat Assessment Entry-Point
@@ -47,7 +47,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 # Python 3.10 StrEnum shim
@@ -171,7 +171,7 @@ class ThreatAssessment:
     scores: list[ThreatScore] = field(default_factory=list)
     overall_severity: ThreatSeverity | None = None
     recommended_action: RecommendedAction = RecommendedAction.ALLOW
-    assessed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    assessed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     redacted_diff: str = ""  # Safe diff for agent consumption
     placeholder_map: dict[str, str] = field(default_factory=dict)
 

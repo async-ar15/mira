@@ -1,4 +1,4 @@
-# backend/database/repository.py
+﻿# backend/database/repository.py
 #
 # Data access layer — all SQL operations go through these functions.
 #
@@ -29,7 +29,7 @@
 
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select
@@ -124,7 +124,7 @@ async def save_review(
     Raises:
         SQLAlchemyError on database failure (caller handles retry/logging).
     """
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
 
     # Step 1: Build the PRReviewRecord ORM object
     review = PRReviewRecord(

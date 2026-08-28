@@ -1,4 +1,4 @@
-"""JSON-structured logging for the PR Review Agent.
+﻿"""JSON-structured logging for the PR Review Agent.
 
 DESIGN OVERVIEW
   Every log entry is a JSON object written to Python's stdlib logging.
@@ -36,7 +36,7 @@ from __future__ import annotations
 import json
 import logging
 import traceback as tb_module
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 _SERVICE_NAME = "mira"
@@ -75,7 +75,7 @@ class StructuredLogger:
         Returns the entry dict so callers can inspect it in tests.
         """
         entry: dict[str, Any] = {
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "service": _SERVICE_NAME,
             "logger": self._name,
             "level": logging.getLevelName(level),

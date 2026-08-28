@@ -1,4 +1,4 @@
-# backend/database/models.py
+﻿# backend/database/models.py
 #
 # SQLAlchemy ORM table definitions for the structured persistence layer.
 #
@@ -43,7 +43,7 @@
 
 import hashlib
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     BigInteger,
@@ -202,7 +202,7 @@ class PRReviewRecord(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         comment="UTC timestamp of when this review run was created.",
     )
 
@@ -210,8 +210,8 @@ class PRReviewRecord(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         comment="UTC timestamp of last update to this record.",
     )
 
@@ -360,7 +360,7 @@ class FindingRecord(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         comment="UTC timestamp of when this finding was recorded.",
     )
 
@@ -667,15 +667,15 @@ class HITLReview(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         comment="UTC timestamp when this item entered the HITL queue.",
     )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         comment="UTC timestamp of last status update.",
     )
 
@@ -796,7 +796,7 @@ class HITLFeedback(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         comment="UTC timestamp when this feedback was recorded.",
     )
 
@@ -897,7 +897,7 @@ class LLMCallLog(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         index=True,
         comment="UTC timestamp when the LLM call completed. Indexed for time-window queries.",
     )

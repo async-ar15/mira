@@ -1,4 +1,4 @@
-# backend/memory/tiger_client.py
+﻿# backend/memory/tiger_client.py
 #
 # Tiger Cloud memory client — replaces qdrant_client.py entirely.
 #
@@ -44,7 +44,7 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import asyncpg
@@ -96,7 +96,7 @@ class CodeChunk:
     chunk_index: int = 0
     symbol: str | None = None
     token_count: int | None = None
-    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
 

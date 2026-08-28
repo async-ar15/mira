@@ -1,4 +1,4 @@
-# backend/economics/budget.py
+﻿# backend/economics/budget.py
 #
 # Phase 16 — BudgetGuard: hard daily-cap enforcement on LLM spend.
 #
@@ -26,7 +26,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from backend.config.settings import Settings, get_settings
 from backend.economics.cost_repository import get_daily_spend
@@ -72,7 +72,7 @@ class BudgetGuard:
 
     async def current_daily_spend_usd(self) -> float:
         """Return the cumulative USD spent in the current UTC day."""
-        return await get_daily_spend(at=datetime.now(UTC))
+        return await get_daily_spend(at=datetime.now(timezone.utc))
 
     async def check_daily_budget(self) -> None:
         """

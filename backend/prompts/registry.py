@@ -1,4 +1,4 @@
-# backend/prompts/registry.py
+﻿# backend/prompts/registry.py
 #
 # PromptRegistry — versioned prompt loader for all specialist agents.
 #
@@ -43,7 +43,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import ClassVar
 
@@ -83,7 +83,7 @@ class PromptVersion:
     agent_type: AgentType
     version_str: str
     content: str
-    loaded_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    loaded_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class PromptRegistry:

@@ -1,4 +1,4 @@
-# backend/hitl/dispute.py
+﻿# backend/hitl/dispute.py
 #
 # HITL Dispute Use Case — Phase 19.
 #
@@ -31,7 +31,7 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -188,7 +188,7 @@ async def resolve_dispute(
         hitl_review.human_verdict = request.human_verdict
         hitl_review.human_reason = request.reason
         hitl_review.reviewer_id = request.reviewer_id
-        hitl_review.resolved_at = datetime.now(UTC)
+        hitl_review.resolved_at = datetime.now(timezone.utc)
 
         # Step 5: Flush within savepoint — savepoint commits on nested block exit.
         # (demo-day-readiness Bug #5 pattern: save first, post second.)

@@ -1,4 +1,4 @@
-# backend/economics/cost_repository.py
+﻿# backend/economics/cost_repository.py
 #
 # Phase 16 — Persistence + aggregation for LLM cost data.
 #
@@ -22,7 +22,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import asyncpg
 from sqlalchemy import func, select
@@ -93,7 +93,7 @@ async def record_llm_call(
 # ---------------------------------------------------------------------------
 def _utc_today_start() -> datetime:
     """Return midnight UTC of the current day."""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     return datetime(now.year, now.month, now.day, tzinfo=UTC)
 
 
@@ -107,7 +107,7 @@ async def get_daily_spend(
     Used by BudgetGuard before each agent LLM call. Returns 0.0 if the table
     is empty or unreachable (fail-open: never block on telemetry failure).
     """
-    target = at or datetime.now(UTC)
+    target = at or datetime.now(timezone.utc)
     day_start = datetime(target.year, target.month, target.day, tzinfo=UTC)
     day_end = day_start + timedelta(days=1)
 
@@ -190,7 +190,7 @@ async def get_summary() -> EconomicsSummary:
 
     The dashboard's primary cost card consumes this single endpoint.
     """
-    datetime.now(UTC)
+    datetime.now(timezone.utc)
     today_start = _utc_today_start()
     d7_start = today_start - timedelta(days=6)  # inclusive of today = 7 days
     d30_start = today_start - timedelta(days=29)  # inclusive of today = 30 days

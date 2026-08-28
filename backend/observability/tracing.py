@@ -1,4 +1,4 @@
-"""Span-based distributed tracing for the PR Review Agent.
+﻿"""Span-based distributed tracing for the PR Review Agent.
 
 DESIGN OVERVIEW
   Every PR review produces one TraceContext keyed by review_id.
@@ -48,7 +48,7 @@ from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 # Module-level ContextVar: holds the active TraceContext for the current coroutine.
@@ -123,7 +123,7 @@ class TraceSpan:
         """
         self.logs.append(
             {
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "level": level,
                 "message": message,
             }
@@ -195,7 +195,7 @@ class TraceContext:
             parent_span_id=parent_span_id or self._current_span_id,
             operation_name=operation_name,
             start_time=time.monotonic(),
-            start_epoch=datetime.now(UTC).isoformat(),
+            start_epoch=datetime.now(timezone.utc).isoformat(),
         )
         self.spans.append(span)
         self._current_span_id = span.span_id
