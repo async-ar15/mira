@@ -42,7 +42,6 @@ async def main() -> None:
     results: list[tuple[str, bool, str]] = []
 
     def check(name: str, condition: bool, detail: str = "") -> None:
-        status = "PASS" if condition else "FAIL"
         results.append((name, condition, detail))
         icon = "✓" if condition else "✗"
         print(f"  [{icon}] {name}" + (f"  ({detail})" if detail else ""))
@@ -57,7 +56,7 @@ async def main() -> None:
     try:
         from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-        from backend.database.models import Base, FindingRecord, PRReviewRecord
+        from backend.database.models import Base
 
         # Use SQLite in-memory with aiosqlite for zero-infrastructure testing.
         # (Storage-Engines.md: "unit smoke tests use in-memory DB for speed.")
