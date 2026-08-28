@@ -161,14 +161,36 @@ async def retrieve_context_for_diff(
     # TIGER: was Qdrant search — now pgvectorscale DiskANN hybrid retrieval
     # get_tiger_memory() returns a module-level singleton; search() handles errors
     # and returns [] on any backend failure (graceful degradation preserved).
-    client = get_tiger_memory()
-    results = await client.search(
-        query_vector,
-        repo=repo_full_name,
-        hybrid=True,
-        query_text=query_text,
-        top_k=5,
-    )
+    #
+    # NOTE: Tiger is initialized in the web lifespan (main.py) but NOT in the
+    # ARQ worker process. The worker calls retrieve_context_for_diff() which
+    # reaches here — but Tiger was never initialized in that process.
+    # RAG is an OPTIONAL enhancement. If Tiger is unavailable, return "" gracefully.
+    # (RAG-Architecture.md: "RAG context is an enhancement, NEVER a hard dependency.")
+    try:
+        client = get_tiger_memory()
+        results = await client.search(
+            query_vector,
+            repo=repo_full_name,
+            hybrid=True,
+            query_text=query_text,
+            top_k=5,
+        )
+    except RuntimeError as e:
+        logger.warning(
+            "retrieve_context | tiger_not_initialized | repo=%s error=%s -> returning ''",
+            repo_full_name,
+            e,
+        )
+        return ""
+    except Exception as e:
+        logger.warning(
+            "retrieve_context | tiger_search_error | repo=%s error=%s: %s -> returning ''",
+            repo_full_name,
+            type(e).__name__,
+            e,
+        )
+        return ""
 
     # Step 4: Filter by minimum similarity score.
     # TigerMemoryClient.search() returns list[CodeChunk] dataclasses.
