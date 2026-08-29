@@ -58,3 +58,9 @@ qdrant_data/
 *.log
 logs/
 .hermes/
+
+# --- Personal & documentation ---
+TIGERDATA_INTEGRATION_PLAN.md
+my-future-work.md
+memory.md
+docs/
