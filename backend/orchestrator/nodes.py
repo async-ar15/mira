@@ -262,12 +262,13 @@ async def build_context(state: PRReviewState) -> dict[str, Any]:
 
 # Per-agent timeout in seconds.
 # Agents doing LLM calls need time, but we cannot wait forever.
-# These are conservative values — tuned in Phase 16 (cost/economics).
+# Increased from original values (45s) because LLM API response times
+# can reach 40-50s on free/shared tier infrastructure.
 _AGENT_TIMEOUTS = {
-    "security": 60,  # security agent runs multiple checks, needs more time
-    "quality": 45,
-    "test": 45,
-    "docs": 30,  # docs agent has less to check, fastest
+    "security": 90,  # security agent runs multiple checks, needs more time
+    "quality": 90,
+    "test": 90,
+    "docs": 90,  # all agents get equal budget
 }
 
 
@@ -810,11 +811,15 @@ async def post_review(state: PRReviewState) -> dict[str, Any]:
                 hitl_err,
             )
 
-        return {
-            "review_posted": False,
-            "github_review_id": None,
-            "status": ReviewStatus.COMPLETED,
-        }
+        # NOTE: Even when routing to HITL, we STILL post to GitHub so the
+        # developer sees feedback immediately. The review body will include a
+        # notice that human review is also pending.
+        # Fall through to the GitHub post below.
+        logger.info(
+            "post_review | posting_partial_review_to_github | reason=%s workflow=%s",
+            state["human_review_reason"],
+            state["workflow_id"],
+        )
 
     logger.info(
         "post_review | posting_to_github | verdict=%s findings=%d repo=%s pr=%d",
