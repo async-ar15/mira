@@ -1,68 +1,68 @@
 /* ══════════════════════════════════════
    MIRA DOCUMENTATION STYLE SYSTEM
-   Palette E (Obsidian Violet) 
-   Font Pair C (DM Serif Display × Plus Jakarta Sans)
+   Palette D (Forest Sage) 
+   Font Pair B (Fraunces × DM Sans)
 ══════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300;1,9..144,600&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ── LIGHT ── */
 :root {
-  --bg:             #f4f0fb;
-  --bg-tint:        #ebe4f6;
-  --surface:        #fbf9fe;
+  --bg:             #f2f5f0;
+  --bg-tint:        #e8ede4;
+  --surface:        #fafcf8;
   --surface-up:     #ffffff;
-  --border:         rgba(50, 20, 90, 0.11);
-  --border-hi:      rgba(50, 20, 90, 0.24);
-  --text:           #22143a;
-  --text-bright:    #120a22;
-  --text-dim:       #7060a0;
-  --accent:         #7c3aed;
-  --accent-dim:     rgba(124, 58, 237, 0.10);
-  --accent-bright:  #6020d0;
-  --success:        #0f9e6e;
-  --success-dim:    rgba(15, 158, 110, 0.12);
-  --warning:        #d4820e;
-  --warning-dim:    rgba(212, 130, 14, 0.12);
-  --danger:         #c0283c;
-  --danger-dim:     rgba(192, 40, 60, 0.10);
-  --code-bg:        #1a1028;
-  --code-text:      #d0c0f0;
-  --code-accent:    #c084fc;
-  --code-string:    #86efac;
-  --code-comment:   #604880;
+  --border:         rgba(20, 50, 30, 0.11);
+  --border-hi:      rgba(20, 50, 30, 0.24);
+  --text:           #1a2e22;
+  --text-bright:    #0c1e14;
+  --text-dim:       #5e7868;
+  --accent:         #2d7a4a;
+  --accent-dim:     rgba(45, 122, 74, 0.11);
+  --accent-bright:  #1e5c36;
+  --success:        #3a9e5c;
+  --success-dim:    rgba(58, 158, 92, 0.12);
+  --warning:        #c08020;
+  --warning-dim:    rgba(192, 128, 32, 0.12);
+  --danger:         #b83030;
+  --danger-dim:     rgba(184, 48, 48, 0.10);
+  --code-bg:        #1a2620;
+  --code-text:      #c0d8c4;
+  --code-accent:    #68d888;
+  --code-string:    #d8c880;
+  --code-comment:   #4a6850;
 
-  --font-display: 'DM Serif Display', Georgia, serif;
-  --font-body:    'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-mono:    'Fira Code', 'SF Mono', Consolas, monospace;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SF Mono', Consolas, monospace;
 }
 
 /* ── DARK ── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg:             #0e0818;
-    --bg-tint:        #0a0614;
-    --surface:        #140c22;
-    --surface-up:     #1c1230;
-    --border:         rgba(196, 132, 252, 0.10);
-    --border-hi:      rgba(196, 132, 252, 0.22);
-    --text:           #d0b8f0;
-    --text-bright:    #f0e0ff;
-    --text-dim:       #806090;
-    --accent:         #c084fc;
-    --accent-dim:     rgba(196, 132, 252, 0.15);
-    --accent-bright:  #ddb0ff;
-    --success:        #4ade80;
-    --success-dim:    rgba(74, 222, 128, 0.14);
-    --warning:        #facc15;
-    --warning-dim:    rgba(250, 204, 21, 0.14);
-    --danger:         #f87171;
-    --danger-dim:     rgba(248, 113, 113, 0.14);
-    --code-bg:        #06020e;
-    --code-text:      #d0c0f0;
-    --code-accent:    #c084fc;
-    --code-string:    #86efac;
-    --code-comment:   #483660;
+    --bg:             #0e1a12;
+    --bg-tint:        #0a140d;
+    --surface:        #121e14;
+    --surface-up:     #182618;
+    --border:         rgba(120, 200, 140, 0.10);
+    --border-hi:      rgba(120, 200, 140, 0.22);
+    --text:           #b8d8b8;
+    --text-bright:    #d8f0d8;
+    --text-dim:       #6a8e6a;
+    --accent:         #5ec87a;
+    --accent-dim:     rgba(94, 200, 122, 0.14);
+    --accent-bright:  #90e8a0;
+    --success:        #6ed490;
+    --success-dim:    rgba(110, 212, 144, 0.14);
+    --warning:        #e8c050;
+    --warning-dim:    rgba(232, 192, 80, 0.14);
+    --danger:         #e06060;
+    --danger-dim:     rgba(224, 96, 96, 0.14);
+    --code-bg:        #060e08;
+    --code-text:      #b8d8b8;
+    --code-accent:    #68d888;
+    --code-string:    #d8c880;
+    --code-comment:   #3a5840;
   }
 }
 
@@ -138,7 +138,8 @@ body {
 h1 {
   font-family: var(--font-display);
   font-size: clamp(46px, 5.8vw, 82px);
-  font-weight: 400;
+  font-weight: 300;
+  font-style: italic;
   line-height: 1.0;
   letter-spacing: -1.5px;
   color: var(--text-bright);
@@ -148,7 +149,7 @@ h1 em { font-style: italic; color: var(--accent); }
 h2 {
   font-family: var(--font-display);
   font-size: clamp(28px, 3vw, 42px);
-  font-weight: 400;
+  font-weight: 300;
   line-height: 1.15;
   letter-spacing: -0.8px;
   color: var(--text-bright);
@@ -159,7 +160,7 @@ h2 em { font-style: italic; color: var(--accent); }
 h3 {
   font-family: var(--font-display);
   font-size: clamp(18px, 2vw, 22px);
-  font-weight: 400;
+  font-weight: 300;
   color: var(--text-bright);
   margin-top: 16px;
 }
