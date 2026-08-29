@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIRA — Multi-Agent PR Review System</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- NAV -->
+  <nav class="nav" role="navigation" aria-label="Page sections">
+    <div class="nav__inner">
+      <span class="nav__brand">MIRA</span>
+      <a href="index.html" class="active">Overview & Setup</a>
+      <a href="architecture.html">Architecture & Flow</a>
+      <a href="api-and-agents.html">API & Agents</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" role="banner">
+    <div class="hero__eyebrow anim" style="--i:0">Documentation · v2.0</div>
+    <h1 class="anim" style="--i:1">
+      The self-improving<br><em>multi-agent</em> code reviewer
+    </h1>
+    <p class="hero__sub anim" style="--i:2">
+      MIRA analyzes PRs through 4 distinct LLM perspectives, using a smart aggregator and a Human-In-The-Loop gate to ensure you never merge bad code again.
+    </p>
+    <div class="hero__meta anim" style="--i:3">
+      <span class="badge badge--success">Status: Production</span>
+      <span class="badge badge--accent">v2.0.1</span>
+      <span class="badge badge--mono">Last updated: Sept 2026</span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section class="section" id="overview" aria-labelledby="overview-heading">
+    <div class="section__label" aria-hidden="true">01 — Overview</div>
+    <h2 id="overview-heading">Beyond a <em>wrapper</em></h2>
+    <p class="section__lead">
+      MIRA is fundamentally different from standard GPT wrappers. It utilizes LangGraph to coordinate specialized agents, vector search for context, and robust cloud infrastructure for compliance and analytics.
+    </p>
+
+    <div class="grid-2">
+      <div class="card anim" style="--i:0">
+        <h3>Graph-Based Orchestration</h3>
+        <p>A LangGraph state machine orchestrates parallel execution of Security, Quality, Testing, and Documentation agents using diverse Gemini models.</p>
+      </div>
+      <div class="card anim" style="--i:1">
+        <h3>Human-In-The-Loop (HITL)</h3>
+        <p>If the aggregator agent's confidence drops below 0.5, the review is routed to a human queue in Slack instead of auto-posting to GitHub.</p>
+      </div>
+      <div class="card card--accent anim" style="--i:2">
+        <h3>Role-Based Security</h3>
+        <p>JWT authentication gates the dashboard. Viewers can see metrics, reviewers can trigger actions, and admins can export full ZIP bundles.</p>
+      </div>
+      <div class="card card--success anim" style="--i:3">
+        <h3>Immutable Audit Trails</h3>
+        <p>Every finding, cost metric, and HITL decision is stored in Tiger Cloud and shipped nightly to an AWS S3 bucket with Object Lock (7-year retention).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features" aria-labelledby="features-heading">
+    <div class="section__label" aria-hidden="true">02 — Key Features</div>
+    <h2 id="features-heading">Everything you need for <em>enterprise</em></h2>
+    
+    <div class="table-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Standard AI Reviewer</th>
+            <th class="col--hi">MIRA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Model Routing</td>
+            <td><span class="cell--no">Single Model</span></td>
+            <td><span class="cell--yes">Smart Routing (Pro for logic, Flash for style)</span></td>
+          </tr>
+          <tr>
+            <td>Audit Compliance</td>
+            <td><span class="cell--no">None</span></td>
+            <td><span class="cell--yes">S3 Object Lock + Tiger Cloud</span></td>
+          </tr>
+          <tr>
+            <td>Calibration & Analytics</td>
+            <td><span class="cell--no">None</span></td>
+            <td><span class="cell--yes">Aggregator agreement rates & cost tracking</span></td>
+          </tr>
+          <tr>
+            <td>Data Export</td>
+            <td><span class="cell--partial">Manual JSON</span></td>
+            <td><span class="cell--yes">1-click Signed S3 ZIP bundles</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout--info">
+      <span class="callout__icon">ℹ</span>
+      <div>
+        <strong>Auto Model Routing:</strong> Our feature-flagged <code>AUTO_MODEL_ROUTING</code> automatically selects the most cost-effective Gemini tier based on the PR's complexity score and historical calibration data.
+      </div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section class="section" id="setup" aria-labelledby="setup-heading">
+    <div class="section__label" aria-hidden="true">03 — Local Setup</div>
+    <h2 id="setup-heading">Get up and <em>running</em></h2>
+    <p class="section__lead">MIRA runs locally using Docker Compose, spinning up the FastAPI web server, the ARQ Redis worker, and MinIO for local audit log testing.</p>
+
+    <ol class="steps">
+      <li class="step">
+        <div class="step__number" aria-hidden="true">01</div>
+        <div class="step__body">
+          <h3>Clone and Configure</h3>
+          <p>Clone the repository and copy the environment template.</p>
+          <div class="code-block">
+            <div class="code-block__header">
+              <span class="code-block__lang">Bash</span>
+            </div>
+            <pre><code>git clone https://github.com/async-ar15/mira.git
+cd mira
+cp .env.example .env</code></pre>
+          </div>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__number" aria-hidden="true">02</div>
+        <div class="step__body">
+          <h3>Set API Keys</h3>
+          <p>You will need a GitHub Fine-Grained Token, a Gemini API Key, and your Tiger Cloud database credentials.</p>
+          <div class="callout callout--warning">
+            <span class="callout__icon">⚠</span>
+            <div>
+              <strong>AWS Credentials:</strong> For local development, the Docker stack uses MinIO. You only need real AWS S3 credentials when deploying to Railway.
+            </div>
+          </div>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__number" aria-hidden="true">03</div>
+        <div class="step__body">
+          <h3>Boot the Stack</h3>
+          <p>Start the web server, Redis, and the ARQ worker queue.</p>
+          <div class="code-block">
+            <div class="code-block__header">
+              <span class="code-block__lang">Bash</span>
+            </div>
+            <pre><code>docker compose -f docker-compose.dev.yml up -d</code></pre>
+          </div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" role="contentinfo">
+    <span>MIRA · System Documentation v2.0</span>
+    <span>Built with care ✦</span>
+  </footer>
+
+</div>
+
+<!-- Smooth scroll -->
+<script>
+  document.querySelectorAll('.nav a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>

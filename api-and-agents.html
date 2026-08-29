@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API & Agents — MIRA</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- NAV -->
+  <nav class="nav" role="navigation" aria-label="Page sections">
+    <div class="nav__inner">
+      <span class="nav__brand">MIRA</span>
+      <a href="index.html">Overview & Setup</a>
+      <a href="architecture.html">Architecture & Flow</a>
+      <a href="api-and-agents.html" class="active">API & Agents</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" role="banner">
+    <div class="hero__eyebrow anim" style="--i:0">Reference</div>
+    <h1 class="anim" style="--i:1">
+      Agents, Auth, & <em>Endpoints</em>
+    </h1>
+    <p class="hero__sub anim" style="--i:2">
+      Deep dive into the specialized LLM agents, confidence scoring, and the role-gated REST API.
+    </p>
+  </header>
+
+  <!-- AGENTS -->
+  <section class="section" id="agents" aria-labelledby="agents-heading">
+    <div class="section__label" aria-hidden="true">01 — The Agent Swarm</div>
+    <h2 id="agents-heading">Specialized <em>Perspectives</em></h2>
+    <p class="section__lead">Instead of asking a single prompt to do everything, MIRA fans out to four parallel agents, each with a specific prompt, system persona, and context retrieval strategy.</p>
+
+    <div class="grid-2">
+      <div class="card anim" style="--i:0">
+        <h3>Security Agent (Gemini Pro)</h3>
+        <p>Hunts for vulnerabilities, hardcoded secrets, and injection flaws. Given the highest context weight and uses the more expensive Pro model.</p>
+      </div>
+      <div class="card anim" style="--i:1">
+        <h3>Quality Agent (Gemini Flash)</h3>
+        <p>Focuses on cyclomatic complexity, DRY principles, and adherence to established patterns within the local codebase context.</p>
+      </div>
+      <div class="card anim" style="--i:2">
+        <h3>Test Agent (Gemini Flash)</h3>
+        <p>Checks if new logic is covered by existing tests, or if edge cases are missing from the newly added test suites.</p>
+      </div>
+      <div class="card anim" style="--i:3">
+        <h3>Docs Agent (Gemini Flash)</h3>
+        <p>Ensures that docstrings and README changes stay in sync with the underlying structural changes.</p>
+      </div>
+    </div>
+
+    <div class="callout callout--warning">
+      <span class="callout__icon">⚠</span>
+      <div>
+        <strong>Agent Timeouts:</strong> To prevent runaway costs and hanging queues, all Flash agents have a strict 90s timeout. The Security agent (Pro) has a 120s timeout. If an agent times out, the Aggregator marks its score as 0.
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTHENTICATION -->
+  <section class="section" id="auth" aria-labelledby="auth-heading">
+    <div class="section__label" aria-hidden="true">02 — Authentication</div>
+    <h2 id="auth-heading">Role-Gated <em>Access</em></h2>
+    <p class="section__lead">MIRA's dashboard and API are protected by JWT authentication via `python-jose`. The `users` table in Tiger Cloud supports three distinct roles.</p>
+
+    <div class="table-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Capabilities</th>
+            <th class="col--hi">Endpoints Accessed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Viewer</td>
+            <td><span class="cell--yes">Read-only dashboard, metrics, and basic events.</span></td>
+            <td><code>GET /auth/me</code><br><code>GET /api/v1/events</code></td>
+          </tr>
+          <tr>
+            <td>Reviewer</td>
+            <td><span class="cell--yes">Trigger manual reviews, clear HITL queue.</span></td>
+            <td><code>POST /api/v1/trigger</code><br><code>POST /api/v1/hitl/resolve</code></td>
+          </tr>
+          <tr>
+            <td>Admin</td>
+            <td><span class="cell--yes">Manage users, access economics/costs, trigger exports.</span></td>
+            <td><code>GET /api/v1/economics</code><br><code>GET /api/v1/calibration</code><br><code>GET /api/v1/export</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block__header">
+        <span class="code-block__lang">Python</span>
+        <span class="code-block__file">backend/auth/jwt.py</span>
+      </div>
+      <pre><code><span class="ck">from</span> fastapi <span class="ck">import</span> Depends, HTTPException
+<span class="ck">from</span> auth.models <span class="ck">import</span> User
+
+<span class="ck">def</span> <span class="ca">require_admin</span>(current_user: User = Depends(get_current_user)):
+    <span class="ck">if</span> current_user.role != <span class="cs">'admin'</span>:
+        <span class="ck">raise</span> HTTPException(status_code=403, detail=<span class="cs">"Admin access required"</span>)
+    <span class="ck">return</span> current_user</code></pre>
+    </div>
+  </section>
+
+  <!-- EXPORT -->
+  <section class="section" id="export" aria-labelledby="export-heading">
+    <div class="section__label" aria-hidden="true">03 — Data Export</div>
+    <h2 id="export-heading">Compliance <em>Exports</em></h2>
+    <p class="section__lead">For SOC2 or internal audit compliance, admins can generate cryptographic bundles of all agent findings and HITL decisions.</p>
+
+    <ol class="steps">
+      <li class="step">
+        <div class="step__number" aria-hidden="true">01</div>
+        <div class="step__body">
+          <h3>Request the Export</h3>
+          <p>The admin calls <code>GET /api/v1/export?pr_id=123&scope=full</code>.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__number" aria-hidden="true">02</div>
+        <div class="step__body">
+          <h3>S3 Upload & ZIP</h3>
+          <p>MIRA queries Tiger Cloud, serializes the events to JSON, packages them in a ZIP, and uploads it to the Object-Locked S3 bucket.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__number" aria-hidden="true">03</div>
+        <div class="step__body">
+          <h3>Receive Pre-Signed URL</h3>
+          <p>The API responds with a temporary download link: <code>{"download_url": "https://s3.../export-abc.zip?Expires=3600"}</code></p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- CALIBRATION -->
+  <section class="section" id="calibration" aria-labelledby="calibration-heading">
+    <div class="section__label" aria-hidden="true">04 — Calibration</div>
+    <h2 id="calibration-heading">Self-Improving <em>Feedback Loops</em></h2>
+    <p class="section__lead">The <code>/api/v1/calibration</code> endpoint powers the Calibration Dashboard. Every time a human resolves a HITL review in Slack, that decision is logged. A nightly ARQ job aggregates these human verdicts against the original agent scores to calculate "Agent Agreement Rates", continuously refining our auto-routing logic.</p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" role="contentinfo">
+    <span>MIRA · System Documentation v2.0</span>
+    <span>Built with care ✦</span>
+  </footer>
+
+</div>
+
+<!-- Smooth scroll -->
+<script>
+  document.querySelectorAll('.nav a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>
