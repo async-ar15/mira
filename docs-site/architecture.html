@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture — MIRA</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- NAV -->
+  <nav class="nav" role="navigation" aria-label="Page sections">
+    <div class="nav__inner">
+      <span class="nav__brand">MIRA</span>
+      <a href="index.html">Overview & Setup</a>
+      <a href="architecture.html" class="active">Architecture & Flow</a>
+      <a href="api-and-agents.html">API & Agents</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" role="banner">
+    <div class="hero__eyebrow anim" style="--i:0">System Design</div>
+    <h1 class="anim" style="--i:1">
+      Orchestrating <em>intelligence</em>
+    </h1>
+    <p class="hero__sub anim" style="--i:2">
+      How MIRA uses LangGraph to manage parallel reasoning agents, and Tiger Cloud for unified vector and event storage.
+    </p>
+  </header>
+
+  <!-- WORKFLOW -->
+  <section class="section" id="workflow" aria-labelledby="workflow-heading">
+    <div class="section__label" aria-hidden="true">01 — The Review Lifecycle</div>
+    <h2 id="workflow-heading">From PR to <em>Feedback</em></h2>
+    <p class="section__lead">When a PR is opened, a GitHub webhook triggers the FastAPI receiver. The heavy lifting is immediately offloaded to a Redis-backed ARQ queue to prevent timeouts.</p>
+
+    <div class="callout callout--info">
+      <span class="callout__icon">ℹ</span>
+      <div>
+        <strong>Idempotency:</strong> The FastAPI receiver implements strict idempotency checks against Tiger Cloud. If GitHub retries a webhook delivery while the ARQ worker is still processing the code, the duplicate is dropped.
+      </div>
+    </div>
+
+    <!-- MERMAID DIAGRAM -->
+    <div class="code-block" style="background: transparent; border: none;">
+      <pre class="mermaid">
+graph TD
+    A[GitHub PR Opened] -->|Webhook| B(FastAPI Receiver)
+    B -->|Idempotency Check| C{Tiger Cloud DB}
+    C -->|New Event| D[ARQ Job Queue - Redis]
+    C -->|Duplicate| E[Drop]
+    
+    D -->|Worker Picks Up| F[LangGraph Orchestrator]
+    
+    F -->|Parallel Fan-Out| G1(Security Agent)
+    F -->|Parallel Fan-Out| G2(Quality Agent)
+    F -->|Parallel Fan-Out| G3(Test Agent)
+    F -->|Parallel Fan-Out| G4(Docs Agent)
+    
+    G1 -->|Gemini 1.5 Pro| H(Aggregator Agent)
+    G2 -->|Gemini 1.5 Flash| H
+    G3 -->|Gemini 1.5 Flash| H
+    G4 -->|Gemini 1.5 Flash| H
+    
+    H --> I{HITL Confidence Gate}
+    
+    I -->|Confidence >= 0.5| J[Auto-Post to GitHub]
+    I -->|Confidence < 0.5| K[Slack Alert: Human Queue]
+      </pre>
+    </div>
+  </section>
+
+  <!-- DATA LAYER -->
+  <section class="section" id="data-layer" aria-labelledby="data-layer-heading">
+    <div class="section__label" aria-hidden="true">02 — The Data Layer</div>
+    <h2 id="data-layer-heading">Tiger Cloud & <em>Compliance</em></h2>
+    <p class="section__lead">MIRA consolidates its vector search (for codebase context) and event tracking (for audit trails) into a single PostgreSQL-compatible datastore: Tiger Cloud.</p>
+
+    <dl class="prop-list">
+      <div class="prop-row">
+        <dt class="prop-key">Vector Search</dt>
+        <dd class="prop-val">Uses DiskANN in Tiger Cloud for lightning-fast retrieval of code chunks (`context_retriever.py`). We fully swapped out Qdrant to reduce operational complexity.</dd>
+      </div>
+      <div class="prop-row">
+        <dt class="prop-key">Event Logging</dt>
+        <dd class="prop-val">Every agent thought process, confidence score, and API cost is logged to a hypertables-backed `agent_events` table for dashboard analytics.</dd>
+      </div>
+      <div class="prop-row">
+        <dt class="prop-key">S3 Export</dt>
+        <dd class="prop-val">A nightly ARQ cron job purges old events, bundles them into ZIP files, and ships them to an AWS S3 bucket with Object Lock (7-year retention) for strict compliance.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" role="contentinfo">
+    <span>MIRA · System Documentation v2.0</span>
+    <span>Built with care ✦</span>
+  </footer>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim(),
+      primaryColor:       dark ? '#0f1830' : '#fafbff',
+      primaryBorderColor: dark ? '#74b0ff' : '#3b5bdb',
+      primaryTextColor:   dark ? '#b8cef0' : '#0f1b35',
+      lineColor:          dark ? '#6080a8' : '#5a6882',
+    }
+  });
+</script>
+
+</body>
+</html>
