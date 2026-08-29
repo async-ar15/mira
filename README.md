@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-0ca678.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Full Documentation](https://img.shields.io/badge/Docs-GitHub_Pages-74b0ff.svg?style=flat-square&logo=github)](https://async-ar15.github.io/mira/)
 
-**[📚 Read the Full HTML Documentation Site Here](https://async-ar15.github.io/mira/)**
+**[Read the Full HTML Documentation Site Here](https://async-ar15.github.io/mira/)**
 
 MIRA is a production-grade, open-source AI Pull Request Review Agent built for engineering teams who need more than just a shallow GPT wrapper. 
 
@@ -17,7 +17,7 @@ Crucially, MIRA acts with caution: if the aggregator's confidence score drops be
 
 ---
 
-## 🚀 Beyond a Wrapper: Key Features
+## Beyond a Wrapper: Key Features
 
 MIRA was engineered to solve the core issues of standard AI coding assistants: lack of context, hallucination, and lack of accountability.
 
@@ -29,7 +29,7 @@ MIRA was engineered to solve the core issues of standard AI coding assistants: l
 
 ---
 
-## 🧠 System Architecture
+## System Architecture
 
 ```mermaid
 graph TD
@@ -62,7 +62,7 @@ See our `docs/adr/ADR-002-architecture-style.md` for our reasoning on modular mo
 
 ---
 
-## 🗄️ Data Layer — Tiger Cloud (TimescaleDB)
+## Data Layer — Tiger Cloud (TimescaleDB)
 
 Most AI projects juggle three separate stores: a vector DB for RAG, a time-series store for traces, and Postgres for structured data. MIRA uses [Tiger Cloud](https://tigerdata.com) — a managed TimescaleDB instance — to collapse all three into one single Postgres database. 
 
@@ -79,7 +79,7 @@ One connection pool. One backup policy. One place to reason about the data.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -96,7 +96,7 @@ One connection pool. One backup policy. One place to reason about the data.
 
 ---
 
-## 💻 Local Development
+## Local Development
 
 Get MIRA running locally in less than 5 minutes. The provided Docker Compose stack will spin up the FastAPI server, Redis, the ARQ worker, and a local MinIO instance (to simulate S3 for audit log exports).
 
@@ -118,7 +118,7 @@ Verify health: `GET http://localhost:8000/health`
 
 ---
 
-## 🗺️ 20-Phase Build Roadmap
+## 20-Phase Build Roadmap
 
 MIRA was built systematically across 20 phases to ensure absolute reliability and engineering rigor.
 
@@ -148,7 +148,7 @@ MIRA was built systematically across 20 phases to ensure absolute reliability an
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 backend/
